@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Quản lý sản phẩm{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Quản lý sản phẩm</h1>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Dashboard</a>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+{% endwith %}
+
+<form method="post" class="card card-body mb-4">
+    <h2 class="h5">Thêm sản phẩm</h2>
+    <div class="row g-2">
+        <div class="col-md-4"><input name="name" class="form-control" placeholder="Tên sản phẩm" required></div>
+        <div class="col-md-2"><input name="price" type="number" min="0" step="0.01" class="form-control" placeholder="Giá" required></div>
+        <div class="col-md-2"><input name="stock" type="number" min="0" class="form-control" placeholder="Tồn kho"></div>
+        <div class="col-md-2"><input name="category_id" type="number" min="1" class="form-control" placeholder="Mã danh mục"></div>
+        <div class="col-md-2"><button class="btn btn-dark w-100">Thêm</button></div>
+        <div class="col-12"><input name="image" class="form-control" placeholder="URL hình ảnh (không bắt buộc)"></div>
+        <div class="col-12"><textarea name="description" class="form-control" rows="2" placeholder="Mô tả"></textarea></div>
+    </div>
+</form>
+
+<div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>ID</th><th>Sản phẩm</th><th>Giá</th><th>Tồn kho</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>{% for product in products %}
+    <tr><td>{{ product.MASANPHAM }}</td><td><strong>{{ product.TENSPH }}</strong><br><small class="text-muted">{{ product.MOTA or '' }}</small></td><td>{{ "{:,.0f}".format(product.DONGIA or 0) }} đ</td><td>{{ product.SOLUONGTON }}</td><td>{{ 'Đang bán' if product.TRANGTHAISPH else 'Tạm ẩn' }}</td><td class="text-end"><a href="{{ url_for('admin.edit_product', product_id=product.MASANPHAM) }}" class="btn btn-sm btn-outline-dark">Sửa</a> <form method="post" action="{{ url_for('admin.delete_product', product_id=product.MASANPHAM) }}" class="d-inline"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa sản phẩm này?')">Xóa</button></form></td></tr>
+    {% else %}<tr><td colspan="6" class="text-center text-muted py-4">Chưa có sản phẩm.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

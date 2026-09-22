@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Sửa sản phẩm{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Sửa sản phẩm #{{ product.MASANPHAM }}</h1>
+<form method="post" class="card card-body">
+    <div class="row g-3">
+        <div class="col-md-8"><label class="form-label">Tên sản phẩm</label><input name="name" class="form-control" value="{{ product.TENSPH or '' }}" required></div>
+        <div class="col-md-4"><label class="form-label">Giá</label><input name="price" type="number" min="0" step="0.01" class="form-control" value="{{ product.DONGIA or 0 }}" required></div>
+        <div class="col-md-4"><label class="form-label">Tồn kho</label><input name="stock" type="number" min="0" class="form-control" value="{{ product.SOLUONGTON or 0 }}"></div>
+        <div class="col-md-4"><label class="form-label">Mã danh mục</label><input name="category_id" type="number" min="1" class="form-control" value="{{ product.MADANHMUC or '' }}"></div>
+        <div class="col-md-4"><label class="form-label">Trạng thái</label><select name="status" class="form-select"><option value="1" {{ 'selected' if product.TRANGTHAISPH else '' }}>Đang bán</option><option value="0" {{ 'selected' if not product.TRANGTHAISPH else '' }}>Tạm ẩn</option></select></div>
+        <div class="col-12"><label class="form-label">URL hình ảnh</label><input name="image" class="form-control" value="{{ product.HINHANH or '' }}"></div>
+        <div class="col-12"><label class="form-label">Mô tả</label><textarea name="description" class="form-control" rows="3">{{ product.MOTA or '' }}</textarea></div>
+    </div>
+    <div class="mt-4"><button class="btn btn-dark">Lưu thay đổi</button> <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary">Hủy</a></div>
+</form>
+{% endblock %}

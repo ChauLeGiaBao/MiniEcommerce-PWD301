@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<div>
+		<p class="text-muted mb-1">Quản trị cửa hàng</p>
+		<h1 class="h3 mb-0">Admin Dashboard</h1>
+	</div>
+	<a href="{{ url_for('shop.products') }}" class="btn btn-outline-dark">Xem cửa hàng</a>
+</div>
+
+<div class="row g-3 mb-4">
+	<div class="col-md-4"><div class="card h-100"><div class="card-body"><p class="text-muted mb-1">Sản phẩm</p><strong class="display-6">{{ product_count }}</strong></div></div></div>
+	<div class="col-md-4"><div class="card h-100"><div class="card-body"><p class="text-muted mb-1">Đơn hàng</p><strong class="display-6">{{ order_count }}</strong></div></div></div>
+	<div class="col-md-4"><div class="card h-100"><div class="card-body"><p class="text-muted mb-1">Sắp hết hàng</p><strong class="display-6">{{ low_stock_count }}</strong></div></div></div>
+</div>
+
+<div class="d-flex gap-2">
+	<a href="{{ url_for('admin.products') }}" class="btn btn-dark">Quản lý sản phẩm</a>
+	<a href="{{ url_for('admin.orders') }}" class="btn btn-outline-dark">Quản lý đơn hàng</a>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Quản lý đơn hàng{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h3 mb-0">Quản lý đơn hàng</h1><a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Dashboard</a></div>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Ngày đặt</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+{% for order in orders %}<tr><td>#{{ order.MADONHANG }}</td><td>{{ order.user.HOTEN if order.user else 'Khách vãng lai' }}</td><td>{{ order.NGAYDAT or '-' }}</td><td>{{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</td><td><form method="post" action="{{ url_for('admin.update_order_status', order_id=order.MADONHANG) }}" class="d-flex gap-2"><select name="status" class="form-select form-select-sm"><option value="0" {{ 'selected' if order.TRANGTHAI == 0 else '' }}>Mới</option><option value="1" {{ 'selected' if order.TRANGTHAI == 1 else '' }}>Đang xử lý</option><option value="2" {{ 'selected' if order.TRANGTHAI == 2 else '' }}>Hoàn thành</option><option value="3" {{ 'selected' if order.TRANGTHAI == 3 else '' }}>Đã hủy</option></select><button class="btn btn-sm btn-outline-dark">Lưu</button></form></td><td>{{ order.chitiet_list|length }} sản phẩm</td></tr>
+{% else %}<tr><td colspan="6" class="text-center text-muted py-4">Chưa có đơn hàng.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
