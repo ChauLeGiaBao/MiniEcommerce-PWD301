@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Danh sách sản phẩm{% endblock %}
+{% block content %}
+<h2 class="mb-4">Danh sách sản phẩm</h2>
+
+<div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <a href="/products?sort={{ selected_sort or '' }}"
+           class="btn btn-sm {{ 'btn-dark' if not selected_category else 'btn-outline-dark' }}">Tất cả</a>
+        {% for dm in categories %}
+            {% if dm.MADMCHA %}
+            <a href="/products?category={{ dm.MADANHMUC }}&sort={{ selected_sort or '' }}"
+               class="btn btn-sm {{ 'btn-dark' if selected_category == dm.MADANHMUC else 'btn-outline-dark' }}">
+                {{ dm.TENDM }}
+            </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <form method="get" class="d-flex">
+        {% if selected_category %}
+        <input type="hidden" name="category" value="{{ selected_category }}">
+        {% endif %}
+        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">-- Sắp xếp --</option>
+            <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+            <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+            <option value="name_asc" {% if selected_sort == 'name_asc' %}selected{% endif %}>Tên A-Z</option>
+        </select>
+    </form>
+</div>
+
+<div class="row">
+    {% for sp in products %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="/products/{{ sp.MASANPHAM }}?back_page={{ pagination.page }}&back_category={{ selected_category or '' }}&back_sort={{ selected_sort or '' }}" class="text-decoration-none text-dark">
+                        {{ sp.TENSPH }}
+                    </a>
+                </h5>
+                <p class="card-text text-muted">{{ sp.MOTA }}</p>
+                <p class="fw-bold text-danger">{{ "{:,.0f}".format(sp.DONGIA) }} đ</p>
+                <p class="small">Còn lại: {{ sp.SOLUONGTON }} sản phẩm</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+            <a class="page-link" href="/products?page={{ pagination.prev_num }}&category={{ selected_category or '' }}&sort={{ selected_sort or '' }}">«</a>
+        </li>
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+                <li class="page-item {{ 'active' if p == pagination.page }}">
+                    <a class="page-link" href="/products?page={{ p }}&category={{ selected_category or '' }}&sort={{ selected_sort or '' }}">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+            <a class="page-link" href="/products?page={{ pagination.next_num }}&category={{ selected_category or '' }}&sort={{ selected_sort or '' }}">»</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

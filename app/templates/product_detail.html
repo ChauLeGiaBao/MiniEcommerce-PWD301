@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ product.TENSPH }}{% endblock %}
+{% block content %}
+<a href="/products?page={{ back_page }}&category={{ back_category }}&sort={{ back_sort }}" class="btn btn-outline-secondary btn-sm mb-3">← Quay lại</a>
+
+<div class="card">
+    <div class="card-body">
+        <h2>{{ product.TENSPH }}</h2>
+        <p class="text-muted">Danh mục: {{ product.danhmuc.TENDM }}</p>
+        <p>{{ product.MOTA }}</p>
+        <p class="fs-4 fw-bold text-danger">{{ "{:,.0f}".format(product.DONGIA) }} đ</p>
+        <p>Còn lại: {{ product.SOLUONGTON }} sản phẩm</p>
+        <button class="btn btn-primary">Thêm vào giỏ hàng</button>
+    </div>
+</div>
+{% endblock %}
