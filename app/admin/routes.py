@@ -34,8 +34,8 @@ def products():
         if stock is None:
             stock = 0
 
-        status_val = request.form.get("status", type=int)
-        status = status_val if status_val in (0, 1) else 1
+        status_raw = request.form.get("status")
+        status = 1 if status_raw is None or status_raw == "" else request.form.get("status", type=int)
 
         category_id = request.form.get("category_id", type=int)
         if category_id is not None and category_id <= 0:
@@ -46,7 +46,9 @@ def products():
         elif price is None or price < 0:
             flash("Giá sản phẩm phải lớn hơn hoặc bằng 0.", "danger")
         elif stock < 0:
-            flash("Số lượng tồn kho không được âm.", "danger")
+            flash("Số lượng tồn kho phải lớn hơn hoặc bằng 0.", "danger")
+        elif status not in (0, 1):
+            flash("Trạng thái sản phẩm không hợp lệ (chỉ nhận 0 hoặc 1).", "danger")
         else:
             product = SanPham(
                 TENSPH=name,
@@ -76,8 +78,8 @@ def edit_product(product_id):
         if stock is None:
             stock = 0
 
-        status_val = request.form.get("status", type=int)
-        status = status_val if status_val in (0, 1) else 1
+        status_raw = request.form.get("status")
+        status = 1 if status_raw is None or status_raw == "" else request.form.get("status", type=int)
 
         category_id = request.form.get("category_id", type=int)
         if category_id is not None and category_id <= 0:
@@ -88,7 +90,9 @@ def edit_product(product_id):
         elif price is None or price < 0:
             flash("Giá sản phẩm phải lớn hơn hoặc bằng 0.", "danger")
         elif stock < 0:
-            flash("Số lượng tồn kho không được âm.", "danger")
+            flash("Số lượng tồn kho phải lớn hơn hoặc bằng 0.", "danger")
+        elif status not in (0, 1):
+            flash("Trạng thái sản phẩm không hợp lệ (chỉ nhận 0 hoặc 1).", "danger")
         else:
             product.TENSPH = name
             product.HINHANH = request.form.get("image", "").strip() or None
@@ -128,8 +132,8 @@ def orders():
 @admin_bp.post("/orders/<int:order_id>/status")
 def update_order_status(order_id):
     status = request.form.get("status", type=int)
-    if status not in VALID_ORDER_STATUSES:
-        flash("Trạng thái đơn hàng không hợp lệ.", "danger")
+    if status is None or status not in VALID_ORDER_STATUSES:
+        flash("Trạng thái đơn hàng không hợp lệ (chỉ nhận từ 0 đến 3).", "danger")
         return redirect(url_for("admin.orders"))
 
     order = DonHang.query.get_or_404(order_id)

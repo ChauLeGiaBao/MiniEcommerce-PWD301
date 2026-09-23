@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Trang chủ - Mini Ecommerce{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">🛒 Chào mừng đến với Mini Ecommerce</h1>
+        <p class="fs-5 text-muted">Dự án môn học PWD301 - Cửa hàng thương mại điện tử mini</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{{ url_for('shop.products') }}" class="btn btn-primary btn-lg">🛍️ Xem cửa hàng</a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-dark btn-lg">⚙️ Trang quản trị (Admin)</a>
+            <a href="{{ url_for('api.health') }}" class="btn btn-outline-secondary btn-lg">🔌 Kiểm tra API</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 text-center">
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <div class="card-body">
+                <h5 class="card-title">Cửa hàng (Tuấn)</h5>
+                <p class="card-text text-muted">Xem danh sách sản phẩm, chi tiết sản phẩm, giỏ hàng.</p>
+                <a href="{{ url_for('shop.products') }}" class="btn btn-outline-primary btn-sm">Truy cập Shop</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <div class="card-body">
+                <h5 class="card-title">Quản trị Admin (Long)</h5>
+                <p class="card-text text-muted">Dashboard thống kê, quản lý sản phẩm (CRUD), quản lý đơn hàng.</p>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-dark btn-sm">Truy cập Admin</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <div class="card-body">
+                <h5 class="card-title">REST API (Long)</h5>
+                <p class="card-text text-muted">Cung cấp API JSON danh sách sản phẩm và chi tiết sản phẩm.</p>
+                <a href="{{ url_for('api.products') }}" class="btn btn-outline-secondary btn-sm" target="_blank">Xem API JSON</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
