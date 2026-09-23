@@ -10,8 +10,8 @@ def product_to_dict(product):
         "image": product.HINHANH,
         "price": float(product.DONGIA) if product.DONGIA is not None else None,
         "description": product.MOTA,
-        "stock": product.SOLUONGTON,
-        "status": product.TRANGTHAISPH,
+        "stock": product.SOLUONGTON if product.SOLUONGTON is not None else 0,
+        "status": product.TRANGTHAISPH if product.TRANGTHAISPH is not None else 1,
         "category_id": product.MADANHMUC,
     }
 

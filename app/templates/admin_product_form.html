@@ -2,6 +2,9 @@
 {% block title %}Sửa sản phẩm{% endblock %}
 {% block content %}
 <h1 class="h3 mb-4">Sửa sản phẩm #{{ product.MASANPHAM }}</h1>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+{% endwith %}
 <form method="post" class="card card-body">
     <div class="row g-3">
         <div class="col-md-8"><label class="form-label">Tên sản phẩm</label><input name="name" class="form-control" value="{{ product.TENSPH or '' }}" required></div>

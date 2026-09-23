@@ -12,11 +12,17 @@
 <form method="post" class="card card-body mb-4">
     <h2 class="h5">Thêm sản phẩm</h2>
     <div class="row g-2">
-        <div class="col-md-4"><input name="name" class="form-control" placeholder="Tên sản phẩm" required></div>
-        <div class="col-md-2"><input name="price" type="number" min="0" step="0.01" class="form-control" placeholder="Giá" required></div>
-        <div class="col-md-2"><input name="stock" type="number" min="0" class="form-control" placeholder="Tồn kho"></div>
+        <div class="col-md-3"><input name="name" class="form-control" placeholder="Tên sản phẩm *" required></div>
+        <div class="col-md-2"><input name="price" type="number" min="0" step="0.01" class="form-control" placeholder="Giá *" required></div>
+        <div class="col-md-2"><input name="stock" type="number" min="0" class="form-control" placeholder="Tồn kho" value="0"></div>
         <div class="col-md-2"><input name="category_id" type="number" min="1" class="form-control" placeholder="Mã danh mục"></div>
-        <div class="col-md-2"><button class="btn btn-dark w-100">Thêm</button></div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="1" selected>Đang bán</option>
+                <option value="0">Tạm ẩn</option>
+            </select>
+        </div>
+        <div class="col-md-1"><button class="btn btn-dark w-100">Thêm</button></div>
         <div class="col-12"><input name="image" class="form-control" placeholder="URL hình ảnh (không bắt buộc)"></div>
         <div class="col-12"><textarea name="description" class="form-control" rows="2" placeholder="Mô tả"></textarea></div>
     </div>

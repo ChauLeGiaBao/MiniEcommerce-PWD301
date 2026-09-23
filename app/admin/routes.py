@@ -1,12 +1,19 @@
-from datetime import date
-
 from flask import flash, redirect, render_template, request, url_for
 
 from app.admin import admin_bp
 from app.extensions import db
 from app.models import ChiTietDonHang, DonHang, SanPham
 
+# ==============================================================================
+# TODO: Tích hợp xác thực Admin khi hoàn thành module Auth (Kiên / Bảo).
+# Sau này cần bổ sung @login_required và @admin_required (kiểm tra current_user.ROLE == 'admin')
+# cho tất cả các route bên dưới để bảo vệ khu vực quản trị.
+# ==============================================================================
 
+VALID_ORDER_STATUSES = {0, 1, 2, 3}
+
+
+# TODO: Thêm @login_required, @admin_required
 @admin_bp.route("/")
 def dashboard():
     return render_template(
@@ -17,21 +24,39 @@ def dashboard():
     )
 
 
+# TODO: Thêm @login_required, @admin_required
 @admin_bp.route("/products", methods=["GET", "POST"])
 def products():
     if request.method == "POST":
-        product = SanPham(
-            TENSPH=request.form.get("name", "").strip(),
-            HINHANH=request.form.get("image", "").strip() or None,
-            DONGIA=request.form.get("price", type=float),
-            MOTA=request.form.get("description", "").strip() or None,
-            SOLUONGTON=request.form.get("stock", type=int) or 0,
-            TRANGTHAISPH=request.form.get("status", type=int) if request.form.get("status") is not None else 1,
-            MADANHMUC=request.form.get("category_id", type=int),
-        )
-        if not product.TENSPH or product.DONGIA is None or product.DONGIA < 0:
-            flash("Tên sản phẩm và giá hợp lệ là bắt buộc.", "danger")
+        name = request.form.get("name", "").strip()
+        price = request.form.get("price", type=float)
+        stock = request.form.get("stock", type=int)
+        if stock is None:
+            stock = 0
+
+        status_val = request.form.get("status", type=int)
+        status = status_val if status_val in (0, 1) else 1
+
+        category_id = request.form.get("category_id", type=int)
+        if category_id is not None and category_id <= 0:
+            category_id = None
+
+        if not name:
+            flash("Tên sản phẩm không được để trống.", "danger")
+        elif price is None or price < 0:
+            flash("Giá sản phẩm phải lớn hơn hoặc bằng 0.", "danger")
+        elif stock < 0:
+            flash("Số lượng tồn kho không được âm.", "danger")
         else:
+            product = SanPham(
+                TENSPH=name,
+                HINHANH=request.form.get("image", "").strip() or None,
+                DONGIA=price,
+                MOTA=request.form.get("description", "").strip() or None,
+                SOLUONGTON=stock,
+                TRANGTHAISPH=status,
+                MADANHMUC=category_id,
+            )
             db.session.add(product)
             db.session.commit()
             flash("Đã thêm sản phẩm.", "success")
@@ -40,20 +65,38 @@ def products():
     return render_template("admin_products.html", products=SanPham.query.order_by(SanPham.MASANPHAM.desc()).all())
 
 
+# TODO: Thêm @login_required, @admin_required
 @admin_bp.route("/products/<int:product_id>/edit", methods=["GET", "POST"])
 def edit_product(product_id):
     product = SanPham.query.get_or_404(product_id)
     if request.method == "POST":
-        product.TENSPH = request.form.get("name", "").strip()
-        product.HINHANH = request.form.get("image", "").strip() or None
-        product.DONGIA = request.form.get("price", type=float)
-        product.MOTA = request.form.get("description", "").strip() or None
-        product.SOLUONGTON = request.form.get("stock", type=int) or 0
-        product.TRANGTHAISPH = request.form.get("status", type=int) if request.form.get("status") is not None else 1
-        product.MADANHMUC = request.form.get("category_id", type=int)
-        if not product.TENSPH or product.DONGIA is None or product.DONGIA < 0:
-            flash("Tên sản phẩm và giá hợp lệ là bắt buộc.", "danger")
+        name = request.form.get("name", "").strip()
+        price = request.form.get("price", type=float)
+        stock = request.form.get("stock", type=int)
+        if stock is None:
+            stock = 0
+
+        status_val = request.form.get("status", type=int)
+        status = status_val if status_val in (0, 1) else 1
+
+        category_id = request.form.get("category_id", type=int)
+        if category_id is not None and category_id <= 0:
+            category_id = None
+
+        if not name:
+            flash("Tên sản phẩm không được để trống.", "danger")
+        elif price is None or price < 0:
+            flash("Giá sản phẩm phải lớn hơn hoặc bằng 0.", "danger")
+        elif stock < 0:
+            flash("Số lượng tồn kho không được âm.", "danger")
         else:
+            product.TENSPH = name
+            product.HINHANH = request.form.get("image", "").strip() or None
+            product.DONGIA = price
+            product.MOTA = request.form.get("description", "").strip() or None
+            product.SOLUONGTON = stock
+            product.TRANGTHAISPH = status
+            product.MADANHMUC = category_id
             db.session.commit()
             flash("Đã cập nhật sản phẩm.", "success")
             return redirect(url_for("admin.products"))
@@ -61,6 +104,7 @@ def edit_product(product_id):
     return render_template("admin_product_form.html", product=product)
 
 
+# TODO: Thêm @login_required, @admin_required
 @admin_bp.post("/products/<int:product_id>/delete")
 def delete_product(product_id):
     product = SanPham.query.get_or_404(product_id)
@@ -73,17 +117,23 @@ def delete_product(product_id):
     return redirect(url_for("admin.products"))
 
 
+# TODO: Thêm @login_required, @admin_required
 @admin_bp.route("/orders")
 def orders():
     orders = DonHang.query.order_by(DonHang.MADONHANG.desc()).all()
     return render_template("admin_orders.html", orders=orders)
 
 
+# TODO: Thêm @login_required, @admin_required
 @admin_bp.post("/orders/<int:order_id>/status")
 def update_order_status(order_id):
+    status = request.form.get("status", type=int)
+    if status not in VALID_ORDER_STATUSES:
+        flash("Trạng thái đơn hàng không hợp lệ.", "danger")
+        return redirect(url_for("admin.orders"))
+
     order = DonHang.query.get_or_404(order_id)
-    order.TRANGTHAI = request.form.get("status", type=int)
-    order.NGAYDAT = order.NGAYDAT or date.today()
+    order.TRANGTHAI = status
     db.session.commit()
     flash("Đã cập nhật trạng thái đơn hàng.", "success")
     return redirect(url_for("admin.orders"))
