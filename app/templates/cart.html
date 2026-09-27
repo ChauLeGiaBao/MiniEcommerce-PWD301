@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Giỏ hàng{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Giỏ hàng của bạn</h2>
+    <a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary">
+        Tiếp tục mua sắm
+    </a>
+</div>
+
+{% if cart_items %}
+<div class="table-responsive">
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th class="text-end">Giá</th>
+                <th style="width: 190px;">Số lượng</th>
+                <th class="text-end">Thành tiền</th>
+                <th style="width: 90px;">Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in cart_items %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('shop.product_detail', id=item.product.MASANPHAM) }}"
+                       class="text-decoration-none">
+                        {{ item.product.TENSPH }}
+                    </a>
+                </td>
+
+                <td class="text-end">
+                    {{ "{:,.0f}".format(item.product.DONGIA) }} đ
+                </td>
+
+                <td>
+                    <form action="{{ url_for('shop.update_cart', product_id=item.product.MASANPHAM) }}"
+                          method="POST"
+                          class="d-flex gap-2">
+                        <input type="number"
+                               name="quantity"
+                               value="{{ item.quantity }}"
+                               min="0"
+                               class="form-control form-control-sm">
+                        <button type="submit" class="btn btn-sm btn-secondary">
+                            Cập nhật
+                        </button>
+                    </form>
+                </td>
+
+                <td class="text-end fw-bold">
+                    {{ "{:,.0f}".format(item.subtotal) }} đ
+                </td>
+
+                <td>
+                    <form action="{{ url_for('shop.remove_from_cart', product_id=item.product.MASANPHAM) }}"
+                          method="POST">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Xóa
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex justify-content-between align-items-center">
+    <h4>
+        Tổng cộng:
+        <span class="text-danger">
+            {{ "{:,.0f}".format(total_price) }} đ
+        </span>
+    </h4>
+
+    <a href="{{ url_for('shop.checkout') }}" class="btn btn-success btn-lg">
+        Tiến hành thanh toán
+    </a>
+</div>
+{% else %}
+<div class="alert alert-info">
+    Giỏ hàng của bạn đang trống.
+</div>
+
+<a href="{{ url_for('shop.products') }}" class="btn btn-primary">
+    Mua sắm ngay
+</a>
+{% endif %}
+{% endblock %}
