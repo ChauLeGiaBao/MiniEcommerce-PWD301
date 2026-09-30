@@ -1,17 +1,22 @@
 {% extends "base.html" %}
-{% block title %}{{ product.TENSPH }}{% endblock %}
+{% block title %}{{ product.TENSPH if product else 'Không tìm thấy sản phẩm' }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for(
-    'shop.products',
-    page=back_page,
-    category=back_category,
-    sort=back_sort
-) }}"
+{# Nút quay lại: về đúng trang, danh mục, cách sắp xếp và từ khóa trước đó #}
+<a href="{{ url_for('shop.products', **back_args) }}"
    class="btn btn-outline-secondary btn-sm mb-3">
     ← Quay lại
 </a>
 
+{% if not product %}
+<div class="alert alert-warning">
+    <h4 class="alert-heading">Không tìm thấy sản phẩm</h4>
+    <p class="mb-0">
+        Sản phẩm này không tồn tại hoặc đã ngừng kinh doanh.
+        <a href="{{ url_for('shop.products') }}">Xem các sản phẩm khác</a>
+    </p>
+</div>
+{% else %}
 <div class="card">
     <div class="card-body">
         <h2>{{ product.TENSPH }}</h2>
@@ -22,15 +27,15 @@
         </p>
         {% endif %}
 
-        <p>{{ product.MOTA }}</p>
+        <p>{{ product.MOTA or '' }}</p>
 
         <p class="fs-4 fw-bold text-danger">
-            {{ "{:,.0f}".format(product.DONGIA) }} đ
+            {{ "{:,.0f}".format(product.DONGIA or 0) }} đ
         </p>
 
-        <p>Còn lại: {{ product.SOLUONGTON }} sản phẩm</p>
-
         {% if product.SOLUONGTON and product.SOLUONGTON > 0 %}
+        <p class="text-success">Còn hàng: {{ product.SOLUONGTON }} sản phẩm</p>
+
         <form action="{{ url_for('shop.add_to_cart', product_id=product.MASANPHAM) }}"
               method="POST"
               class="d-inline">
@@ -40,6 +45,8 @@
             </button>
         </form>
         {% else %}
+        <p><span class="badge bg-secondary fs-6">Hết hàng</span></p>
+
         <button class="btn btn-secondary" disabled>
             Hết hàng
         </button>
@@ -50,4 +57,5 @@
         </a>
     </div>
 </div>
+{% endif %}
 {% endblock %}

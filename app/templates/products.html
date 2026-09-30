@@ -2,6 +2,13 @@
 {% block title %}Danh sách sản phẩm{% endblock %}
 
 {% block content %}
+{# Bộ lọc hiện tại. Giá trị None sẽ tự bị bỏ khỏi URL, nên link luôn gọn và không mất tham số #}
+{% set filter_args = {
+    'category': selected_category,
+    'sort': selected_sort,
+    'q': keyword
+} %}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">Danh sách sản phẩm</h2>
     <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-primary">
@@ -9,29 +16,19 @@
     </a>
 </div>
 
-<div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <div>
-        <a href="{{ url_for('shop.products', sort=selected_sort or '') }}"
-           class="btn btn-sm {{ 'btn-dark' if not selected_category else 'btn-outline-dark' }}">
-            Tất cả
-        </a>
+{# Ô tìm kiếm + sắp xếp: dùng chung 1 form để giữ cả từ khóa lẫn cách sắp xếp #}
+<form method="get" action="{{ url_for('shop.products') }}" class="row g-2 mb-3">
+    {% if selected_category %}
+    <input type="hidden" name="category" value="{{ selected_category }}">
+    {% endif %}
 
-        {% for dm in categories %}
-            {% if dm.MADMCHA %}
-            <a href="{{ url_for('shop.products', category=dm.MADANHMUC, sort=selected_sort or '') }}"
-               class="btn btn-sm {{ 'btn-dark' if selected_category == dm.MADANHMUC else 'btn-outline-dark' }}">
-                {{ dm.TENDM }}
-            </a>
-            {% endif %}
-        {% endfor %}
+    <div class="col-md-6">
+        <input type="text" name="q" value="{{ keyword or '' }}"
+               class="form-control" placeholder="Tìm theo tên sản phẩm...">
     </div>
 
-    <form method="get" class="d-flex">
-        {% if selected_category %}
-        <input type="hidden" name="category" value="{{ selected_category }}">
-        {% endif %}
-
-        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+    <div class="col-md-3">
+        <select name="sort" class="form-select" onchange="this.form.submit()">
             <option value="">-- Sắp xếp --</option>
             <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>
                 Giá tăng dần
@@ -43,42 +40,74 @@
                 Tên A-Z
             </option>
         </select>
-    </form>
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-fill">Tìm</button>
+        {% if keyword %}
+        <a href="{{ url_for('shop.products', category=selected_category, sort=selected_sort) }}"
+           class="btn btn-outline-secondary">Xóa</a>
+        {% endif %}
+    </div>
+</form>
+
+{# Lọc theo danh mục: giữ nguyên sort + từ khóa, về lại trang 1 #}
+<div class="mb-4 d-flex flex-wrap gap-2">
+    <a href="{{ url_for('shop.products', sort=selected_sort, q=keyword) }}"
+       class="btn btn-sm {{ 'btn-dark' if not selected_category else 'btn-outline-dark' }}">
+        Tất cả
+    </a>
+
+    {% for dm in categories %}
+    <a href="{{ url_for('shop.products', category=dm.MADANHMUC, sort=selected_sort, q=keyword) }}"
+       class="btn btn-sm {{ 'btn-dark' if selected_category == dm.MADANHMUC else 'btn-outline-dark' }}">
+        {{ dm.TENDM }}
+    </a>
+    {% endfor %}
 </div>
+
+<p class="text-muted small">
+    Tìm thấy {{ pagination.total }} sản phẩm
+    {% if keyword %} cho từ khóa "<strong>{{ keyword }}</strong>"{% endif %}
+</p>
 
 <div class="row">
     {% for sp in products %}
+    {% set detail_url = url_for(
+        'shop.product_detail',
+        id=sp.MASANPHAM,
+        back_page=pagination.page,
+        back_category=selected_category,
+        back_sort=selected_sort,
+        back_q=keyword
+    ) %}
     <div class="col-md-3 mb-4">
         <div class="card h-100">
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">
-                    <a href="{{ url_for(
-                        'shop.product_detail',
-                        id=sp.MASANPHAM,
-                        back_page=pagination.page,
-                        back_category=selected_category or '',
-                        back_sort=selected_sort or ''
-                    ) }}"
-                       class="text-decoration-none text-dark">
+                    <a href="{{ detail_url }}" class="text-decoration-none text-dark">
                         {{ sp.TENSPH }}
                     </a>
                 </h5>
 
-                <p class="card-text text-muted">{{ sp.MOTA }}</p>
+                {% if sp.danhmuc %}
+                <p class="small text-muted mb-1">{{ sp.danhmuc.TENDM }}</p>
+                {% endif %}
+
+                <p class="card-text text-muted">{{ sp.MOTA or '' }}</p>
+
                 <p class="fw-bold text-danger">
-                    {{ "{:,.0f}".format(sp.DONGIA) }} đ
+                    {{ "{:,.0f}".format(sp.DONGIA or 0) }} đ
                 </p>
-                <p class="small">Còn lại: {{ sp.SOLUONGTON }} sản phẩm</p>
+
+                {% if sp.SOLUONGTON and sp.SOLUONGTON > 0 %}
+                <p class="small text-success">Còn hàng: {{ sp.SOLUONGTON }} sản phẩm</p>
+                {% else %}
+                <p class="small"><span class="badge bg-secondary">Hết hàng</span></p>
+                {% endif %}
 
                 <div class="mt-auto d-flex gap-2">
-                    <a href="{{ url_for(
-                        'shop.product_detail',
-                        id=sp.MASANPHAM,
-                        back_page=pagination.page,
-                        back_category=selected_category or '',
-                        back_sort=selected_sort or ''
-                    ) }}"
-                       class="btn btn-outline-primary btn-sm">
+                    <a href="{{ detail_url }}" class="btn btn-outline-primary btn-sm">
                         Chi tiết
                     </a>
 
@@ -101,7 +130,10 @@
     </div>
     {% else %}
     <div class="col-12">
-        <p class="text-muted">Không có sản phẩm phù hợp.</p>
+        <div class="alert alert-light border">
+            Không có sản phẩm phù hợp.
+            <a href="{{ url_for('shop.products') }}">Xem tất cả sản phẩm</a>
+        </div>
     </div>
     {% endfor %}
 </div>
@@ -111,12 +143,7 @@
     <ul class="pagination justify-content-center">
         <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
             <a class="page-link"
-               href="{{ url_for(
-                   'shop.products',
-                   page=pagination.prev_num,
-                   category=selected_category or '',
-                   sort=selected_sort or ''
-               ) }}">
+               href="{{ url_for('shop.products', page=pagination.prev_num, **filter_args) if pagination.has_prev else '#' }}">
                 «
             </a>
         </li>
@@ -125,12 +152,7 @@
             {% if p %}
             <li class="page-item {{ 'active' if p == pagination.page }}">
                 <a class="page-link"
-                   href="{{ url_for(
-                       'shop.products',
-                       page=p,
-                       category=selected_category or '',
-                       sort=selected_sort or ''
-                   ) }}">
+                   href="{{ url_for('shop.products', page=p, **filter_args) }}">
                     {{ p }}
                 </a>
             </li>
@@ -143,12 +165,7 @@
 
         <li class="page-item {{ 'disabled' if not pagination.has_next }}">
             <a class="page-link"
-               href="{{ url_for(
-                   'shop.products',
-                   page=pagination.next_num,
-                   category=selected_category or '',
-                   sort=selected_sort or ''
-               ) }}">
+               href="{{ url_for('shop.products', page=pagination.next_num, **filter_args) if pagination.has_next else '#' }}">
                 »
             </a>
         </li>
