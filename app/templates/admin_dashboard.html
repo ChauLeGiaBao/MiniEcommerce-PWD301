@@ -1,22 +1,243 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - Quản trị cửa hàng{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-	<div>
-		<p class="text-muted mb-1">Quản trị cửa hàng</p>
-		<h1 class="h3 mb-0">Admin Dashboard</h1>
-	</div>
-	<a href="{{ url_for('shop.products') }}" class="btn btn-outline-dark">Xem cửa hàng</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 text-muted small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">Admin</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+            </ol>
+        </nav>
+        <h1 class="h3 mb-0 fw-bold">Tổng quan quản trị (Dashboard)</h1>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+        <a href="{{ url_for('admin.products') }}" class="btn btn-outline-dark">
+            📦 Quản lý sản phẩm
+        </a>
+        <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-dark">
+            🧾 Quản lý đơn hàng
+        </a>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-dark" target="_blank">
+            🛍️ Xem cửa hàng
+        </a>
+    </div>
 </div>
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    <div class="mb-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endwith %}
+
+<!-- Thẻ thống kê KPI chính -->
 <div class="row g-3 mb-4">
-	<div class="col-md-4"><div class="card h-100"><div class="card-body"><p class="text-muted mb-1">Sản phẩm</p><strong class="display-6">{{ product_count }}</strong></div></div></div>
-	<div class="col-md-4"><div class="card h-100"><div class="card-body"><p class="text-muted mb-1">Đơn hàng</p><strong class="display-6">{{ order_count }}</strong></div></div></div>
-	<div class="col-md-4"><div class="card h-100"><div class="card-body"><p class="text-muted mb-1">Sắp hết hàng</p><strong class="display-6">{{ low_stock_count }}</strong></div></div></div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card shadow-sm h-100 border-start border-4 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold small text-uppercase">Tổng sản phẩm</span>
+                    <span class="badge bg-primary-subtle text-primary fs-6 p-2 rounded-3">📦</span>
+                </div>
+                <div class="h2 mb-1 fw-bold">{{ product_count }}</div>
+                <small class="text-muted"><a href="{{ url_for('admin.products') }}" class="text-decoration-none">Xem toàn bộ kho &rarr;</a></small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card shadow-sm h-100 border-start border-4 border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold small text-uppercase">Tổng đơn hàng</span>
+                    <span class="badge bg-success-subtle text-success fs-6 p-2 rounded-3">🧾</span>
+                </div>
+                <div class="h2 mb-1 fw-bold">{{ order_count }}</div>
+                <small class="text-muted"><a href="{{ url_for('admin.orders') }}" class="text-decoration-none">Xem tất cả đơn &rarr;</a></small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card shadow-sm h-100 border-start border-4 border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold small text-uppercase">Sắp hết hàng (&le; {{ low_stock_threshold }})</span>
+                    <span class="badge bg-warning-subtle text-warning fs-6 p-2 rounded-3">⚠️</span>
+                </div>
+                <div class="h2 mb-1 fw-bold {{ 'text-danger' if low_stock_count > 0 else 'text-success' }}">{{ low_stock_count }}</div>
+                <small class="text-muted">Cần nhập thêm hàng</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card shadow-sm h-100 border-start border-4 border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold small text-uppercase">Tổng doanh thu</span>
+                    <span class="badge bg-info-subtle text-info fs-6 p-2 rounded-3">💰</span>
+                </div>
+                <div class="h2 mb-1 fw-bold text-success">{{ "{:,.0f}".format(total_revenue) }} <span class="fs-6 text-muted">đ</span></div>
+                <small class="text-muted">Từ các đơn hàng</small>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="d-flex gap-2">
-	<a href="{{ url_for('admin.products') }}" class="btn btn-dark">Quản lý sản phẩm</a>
-	<a href="{{ url_for('admin.orders') }}" class="btn btn-outline-dark">Quản lý đơn hàng</a>
+<!-- Thống kê trạng thái đơn hàng -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-0 fw-semibold">Tình trạng đơn hàng</h2>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 text-center">
+            <div class="col-6 col-md-3">
+                <div class="p-3 rounded-3 bg-light border">
+                    <div class="text-muted small mb-1">Mới / Chờ xử lý</div>
+                    <div class="h4 mb-0 fw-bold text-secondary">{{ pending_count }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 rounded-3 bg-light border">
+                    <div class="text-muted small mb-1">Đang xử lý</div>
+                    <div class="h4 mb-0 fw-bold text-primary">{{ processing_count }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 rounded-3 bg-light border">
+                    <div class="text-muted small mb-1">Hoàn thành</div>
+                    <div class="h4 mb-0 fw-bold text-success">{{ completed_count }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 rounded-3 bg-light border">
+                    <div class="text-muted small mb-1">Đã hủy</div>
+                    <div class="h4 mb-0 fw-bold text-danger">{{ cancelled_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Đơn hàng gần đây -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0 fw-semibold">Đơn hàng mới nhất</h2>
+                <a href="{{ url_for('admin.orders') }}" class="btn btn-sm btn-outline-dark">Xem tất cả</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td class="fw-semibold">#{{ order.MADONHANG }}</td>
+                                <td>
+                                    {{ order.HOTENNHAN or (order.user.HOTEN if order.user else 'Khách vãng lai') }}
+                                    {% if order.SDTNHAN %}<br><small class="text-muted">{{ order.SDTNHAN }}</small>{% endif %}
+                                </td>
+                                <td class="fw-bold">{{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</td>
+                                <td>
+                                    {% if order.TRANGTHAI == 0 %}
+                                        <span class="badge bg-secondary">Mới</span>
+                                    {% elif order.TRANGTHAI == 1 %}
+                                        <span class="badge bg-primary">Đang xử lý</span>
+                                    {% elif order.TRANGTHAI == 2 %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                    {% elif order.TRANGTHAI == 3 %}
+                                        <span class="badge bg-danger">Đã hủy</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Khác</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('admin.order_detail', order_id=order.MADONHANG) }}" class="btn btn-sm btn-outline-primary">
+                                        Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <div class="fs-1 mb-2">🧾</div>
+                    <p class="mb-0">Chưa có đơn hàng nào trong hệ thống.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Cảnh báo tồn kho thấp -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0 fw-semibold text-danger">⚠️ Cảnh báo tồn kho thấp</h2>
+                <a href="{{ url_for('admin.products') }}" class="btn btn-sm btn-outline-dark">Kho hàng</a>
+            </div>
+            <div class="card-body p-0">
+                {% if low_stock_products %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Tồn kho</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prod in low_stock_products %}
+                            <tr>
+                                <td>
+                                    <strong>{{ prod.TENSPH }}</strong>
+                                    <br><small class="text-muted">{{ "{:,.0f}".format(prod.DONGIA or 0) }} đ</small>
+                                </td>
+                                <td>
+                                    {% if prod.SOLUONGTON == 0 %}
+                                        <span class="badge bg-danger">Hết hàng (0)</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">{{ prod.SOLUONGTON }} chiếc</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('admin.edit_product', product_id=prod.MASANPHAM) }}" class="btn btn-sm btn-outline-dark">
+                                        Nhập hàng
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <div class="fs-1 mb-2">✅</div>
+                    <p class="mb-0">Tất cả sản phẩm đều có lượng tồn kho an toàn (&gt; {{ low_stock_threshold }}).</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

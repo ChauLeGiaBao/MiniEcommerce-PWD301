@@ -1,9 +1,126 @@
 {% extends "base.html" %}
-{% block title %}Quản lý đơn hàng{% endblock %}
+{% block title %}Quản lý đơn hàng - Admin{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h3 mb-0">Quản lý đơn hàng</h1><a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Dashboard</a></div>
-{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
-<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Ngày đặt</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-{% for order in orders %}<tr><td>#{{ order.MADONHANG }}</td><td>{{ order.user.HOTEN if order.user else 'Khách vãng lai' }}</td><td>{{ order.NGAYDAT or '-' }}</td><td>{{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</td><td><form method="post" action="{{ url_for('admin.update_order_status', order_id=order.MADONHANG) }}" class="d-flex gap-2"><select name="status" class="form-select form-select-sm"><option value="0" {{ 'selected' if order.TRANGTHAI == 0 else '' }}>Mới</option><option value="1" {{ 'selected' if order.TRANGTHAI == 1 else '' }}>Đang xử lý</option><option value="2" {{ 'selected' if order.TRANGTHAI == 2 else '' }}>Hoàn thành</option><option value="3" {{ 'selected' if order.TRANGTHAI == 3 else '' }}>Đã hủy</option></select><button class="btn btn-sm btn-outline-dark">Lưu</button></form></td><td>{{ order.chitiet_list|length }} sản phẩm</td></tr>
-{% else %}<tr><td colspan="6" class="text-center text-muted py-4">Chưa có đơn hàng.</td></tr>{% endfor %}</tbody></table></div>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 text-muted small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">Admin</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Đơn hàng</li>
+            </ol>
+        </nav>
+        <h1 class="h3 mb-0 fw-bold">Quản lý đơn hàng</h1>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-dark">
+            📊 Dashboard
+        </a>
+        <a href="{{ url_for('admin.products') }}" class="btn btn-outline-dark">
+            📦 Quản lý sản phẩm
+        </a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    <div class="mb-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endwith %}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0 fw-semibold">Danh sách đơn đặt hàng ({{ orders|length }})</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">Mã đơn</th>
+                        <th>Khách hàng / Người nhận</th>
+                        <th>Ngày đặt</th>
+                        <th>Số SP</th>
+                        <th>Tổng tiền</th>
+                        <th style="min-width: 220px;">Trạng thái & Cập nhật</th>
+                        <th class="text-end" style="width: 100px;">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="fw-bold">#{{ order.MADONHANG }}</td>
+                        <td>
+                            <div>
+                                <strong>{{ order.HOTENNHAN or (order.user.HOTEN if order.user else 'Khách vãng lai') }}</strong>
+                                {% if order.user %}
+                                    <span class="badge bg-light text-muted border small ms-1">Đã có TK</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border small ms-1">Khách vãng lai</span>
+                                {% endif %}
+                            </div>
+                            {% if order.SDTNHAN %}
+                                <small class="text-muted d-block">📞 {{ order.SDTNHAN }}</small>
+                            {% endif %}
+                            {% if order.DIACHIGIAO %}
+                                <small class="text-muted d-inline-block text-truncate" style="max-width: 260px;" title="{{ order.DIACHIGIAO }}">
+                                    📍 {{ order.DIACHIGIAO }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.NGAYDAT %}
+                                <span>{{ order.NGAYDAT.strftime('%d/%m/%Y') }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-dark border">
+                                {{ order.chitiet_list|length }} mặt hàng
+                            </span>
+                        </td>
+                        <td class="fw-bold text-success fs-6">
+                            {{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.MADONHANG) }}" class="d-flex align-items-center gap-2">
+                                <select name="status" class="form-select form-select-sm">
+                                    {% for st_val, st_name in valid_statuses.items() %}
+                                        <option value="{{ st_val }}" {% if order.TRANGTHAI == st_val %}selected{% endif %}>
+                                            {{ st_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-dark text-nowrap">
+                                    Lưu
+                                </button>
+                            </form>
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('admin.order_detail', order_id=order.MADONHANG) }}" class="btn btn-sm btn-primary">
+                                Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <div class="fs-1 mb-2">🧾</div>
+                            <p class="mb-0">Chưa có đơn hàng nào trong hệ thống.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

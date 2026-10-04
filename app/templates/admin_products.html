@@ -1,37 +1,173 @@
 {% extends "base.html" %}
-{% block title %}Quản lý sản phẩm{% endblock %}
+{% block title %}Quản lý sản phẩm - Admin{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Quản lý sản phẩm</h1>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Dashboard</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 text-muted small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">Admin</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sản phẩm</li>
+            </ol>
+        </nav>
+        <h1 class="h3 mb-0 fw-bold">Quản lý sản phẩm</h1>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-dark">
+            📊 Dashboard
+        </a>
+        <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-dark">
+            🧾 Quản lý đơn hàng
+        </a>
+    </div>
 </div>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
-{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+{% if messages %}
+    <div class="mb-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 {% endwith %}
 
-<form method="post" class="card card-body mb-4">
-    <h2 class="h5">Thêm sản phẩm</h2>
-    <div class="row g-2">
-        <div class="col-md-3"><input name="name" class="form-control" placeholder="Tên sản phẩm *" required></div>
-        <div class="col-md-2"><input name="price" type="number" min="0" step="0.01" class="form-control" placeholder="Giá *" required></div>
-        <div class="col-md-2"><input name="stock" type="number" min="0" class="form-control" placeholder="Tồn kho" value="0"></div>
-        <div class="col-md-2"><input name="category_id" type="number" min="1" class="form-control" placeholder="Mã danh mục"></div>
-        <div class="col-md-2">
-            <select name="status" class="form-select">
-                <option value="1" selected>Đang bán</option>
-                <option value="0">Tạm ẩn</option>
-            </select>
-        </div>
-        <div class="col-md-1"><button class="btn btn-dark w-100">Thêm</button></div>
-        <div class="col-12"><input name="image" class="form-control" placeholder="URL hình ảnh (không bắt buộc)"></div>
-        <div class="col-12"><textarea name="description" class="form-control" rows="2" placeholder="Mô tả"></textarea></div>
+<!-- Form thêm sản phẩm mới -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-0 fw-semibold text-primary">➕ Thêm sản phẩm mới</h2>
     </div>
-</form>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('admin.products') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Tên sản phẩm <span class="text-danger">*</span></label>
+                    <input name="name" class="form-control" placeholder="Nhập tên sản phẩm..." maxlength="200" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Đơn giá (đ) <span class="text-danger">*</span></label>
+                    <input name="price" type="number" min="0" step="any" class="form-control" placeholder="0" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Số lượng tồn kho</label>
+                    <input name="stock" type="number" min="0" class="form-control" placeholder="0" value="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Danh mục</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">-- Không phân loại --</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.MADANHMUC }}">{{ cat.TENDM }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Trạng thái</label>
+                    <select name="status" class="form-select">
+                        <option value="1" selected>Đang bán</option>
+                        <option value="0">Tạm ẩn</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Hình ảnh (URL hoặc tên file)</label>
+                    <input name="image" class="form-control" placeholder="VD: no-image.jpg hoặc https://..." maxlength="500">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Mô tả sản phẩm</label>
+                    <textarea name="description" class="form-control" rows="1" placeholder="Mô tả vắn tắt sản phẩm..." maxlength="500"></textarea>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-dark px-4">
+                        Thêm sản phẩm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
-<div class="table-responsive"><table class="table align-middle">
-    <thead><tr><th>ID</th><th>Sản phẩm</th><th>Giá</th><th>Tồn kho</th><th>Trạng thái</th><th></th></tr></thead>
-    <tbody>{% for product in products %}
-    <tr><td>{{ product.MASANPHAM }}</td><td><strong>{{ product.TENSPH }}</strong><br><small class="text-muted">{{ product.MOTA or '' }}</small></td><td>{{ "{:,.0f}".format(product.DONGIA or 0) }} đ</td><td>{{ product.SOLUONGTON }}</td><td>{{ 'Đang bán' if product.TRANGTHAISPH else 'Tạm ẩn' }}</td><td class="text-end"><a href="{{ url_for('admin.edit_product', product_id=product.MASANPHAM) }}" class="btn btn-sm btn-outline-dark">Sửa</a> <form method="post" action="{{ url_for('admin.delete_product', product_id=product.MASANPHAM) }}" class="d-inline"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa sản phẩm này?')">Xóa</button></form></td></tr>
-    {% else %}<tr><td colspan="6" class="text-center text-muted py-4">Chưa có sản phẩm.</td></tr>{% endfor %}</tbody>
-</table></div>
+<!-- Bảng danh sách sản phẩm -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0 fw-semibold">Danh sách sản phẩm trong kho ({{ products|length }})</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Giá bán</th>
+                        <th>Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end" style="width: 150px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td class="text-muted fw-semibold">#{{ product.MASANPHAM }}</td>
+                        <td>
+                            <div class="fw-bold">{{ product.TENSPH }}</div>
+                            {% if product.MOTA %}
+                                <small class="text-muted text-truncate d-inline-block" style="max-width: 320px;">{{ product.MOTA }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if product.danhmuc %}
+                                <span class="badge bg-secondary-subtle text-dark">{{ product.danhmuc.TENDM }}</span>
+                            {% else %}
+                                <span class="text-muted small">Chưa phân loại</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold text-primary">
+                            {{ "{:,.0f}".format(product.DONGIA or 0) }} đ
+                        </td>
+                        <td>
+                            {% if product.SOLUONGTON == 0 %}
+                                <span class="badge bg-danger">Hết hàng (0)</span>
+                            {% elif product.SOLUONGTON <= low_stock_threshold %}
+                                <span class="badge bg-warning text-dark">Sắp hết ({{ product.SOLUONGTON }})</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">{{ product.SOLUONGTON }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if product.TRANGTHAISPH == 1 %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Đang bán</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Tạm ẩn</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{{ url_for('admin.edit_product', product_id=product.MASANPHAM) }}" class="btn btn-sm btn-outline-dark" title="Sửa sản phẩm">
+                                    Sửa
+                                </a>
+                                <form method="post" action="{{ url_for('admin.delete_product', product_id=product.MASANPHAM) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm \'{{ product.TENSPH }}\' không?');" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa sản phẩm">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <div class="fs-1 mb-2">📦</div>
+                            <p class="mb-0">Chưa có sản phẩm nào trong cơ sở dữ liệu.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}
