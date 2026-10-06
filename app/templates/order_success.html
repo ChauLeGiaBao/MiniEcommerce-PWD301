@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Đặt hàng thành công{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="alert alert-success">
+                    Đặt hàng thành công.
+                </div>
+
+                <h2 class="mb-4">Xác nhận đơn hàng</h2>
+
+                <p>
+                    Mã đơn hàng:
+                    <strong>#{{ order.MADONHANG }}</strong>
+                </p>
+
+                <p>
+                    Người nhận:
+                    <strong>{{ order.HOTENNHAN }}</strong>
+                </p>
+
+                <p>
+                    Địa chỉ:
+                    <strong>{{ order.DIACHIGIAO }}</strong>
+                </p>
+
+                <p>
+                    Số điện thoại:
+                    <strong>{{ order.SDTNHAN }}</strong>
+                </p>
+
+                <p>
+                    Tổng tiền:
+                    <strong class="text-danger">
+                        {{ "{:,.0f}".format(order.TONGGIATRI) }} đ
+                    </strong>
+                </p>
+
+                <a href="{{ url_for('shop.products') }}" class="btn btn-primary">
+                    Tiếp tục mua sắm
+                </a>
+
+                <a href="/admin/orders" class="btn btn-outline-secondary">
+                    Xem đơn hàng trong Admin
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
