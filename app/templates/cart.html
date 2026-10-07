@@ -9,6 +9,14 @@
     </a>
 </div>
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
 {% if cart_items %}
 <div class="table-responsive">
     <table class="table table-bordered align-middle">
@@ -21,21 +29,15 @@
                 <th style="width: 90px;">Thao tác</th>
             </tr>
         </thead>
-
         <tbody>
             {% for item in cart_items %}
             <tr>
                 <td>
-                    <a href="{{ url_for('shop.product_detail', id=item.product.MASANPHAM) }}"
-                       class="text-decoration-none">
-                        {{ item.product.TENSPH }}
-                    </a>
+                    {{ item.product.TENSPH }}
                 </td>
-
                 <td class="text-end">
                     {{ "{:,.0f}".format(item.product.DONGIA) }} đ
                 </td>
-
                 <td>
                     <form action="{{ url_for('shop.update_cart', product_id=item.product.MASANPHAM) }}"
                           method="POST"
@@ -50,11 +52,9 @@
                         </button>
                     </form>
                 </td>
-
                 <td class="text-end fw-bold">
                     {{ "{:,.0f}".format(item.subtotal) }} đ
                 </td>
-
                 <td>
                     <form action="{{ url_for('shop.remove_from_cart', product_id=item.product.MASANPHAM) }}"
                           method="POST">
@@ -85,7 +85,6 @@
 <div class="alert alert-info">
     Giỏ hàng của bạn đang trống.
 </div>
-
 <a href="{{ url_for('shop.products') }}" class="btn btn-primary">
     Mua sắm ngay
 </a>
