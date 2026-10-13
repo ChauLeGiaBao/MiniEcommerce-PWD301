@@ -1,0 +1,16 @@
+{# Hiển thị ảnh sản phẩm.
+   - HINHANH là link http(s) -> dùng link đó.
+   - HINHANH rỗng / không phải link (vd "no-image.jpg") -> dùng ảnh mặc định.
+   - Link bị hỏng (404, chặn hotlink...) -> onerror tự đổi sang ảnh mặc định. #}
+{% macro product_image(product, css_class="", height="") %}
+{% set fallback = url_for('static', filename='img/no-image.svg') %}
+{% set raw = (product.HINHANH or '').strip() %}
+{% set src = raw if (raw.startswith('http://') or raw.startswith('https://')) else fallback %}
+<img src="{{ src }}"
+     alt="{{ product.TENSPH }}"
+     class="{{ css_class }}"
+     {% if height %}style="height: {{ height }}; object-fit: cover;"{% endif %}
+     loading="lazy"
+     referrerpolicy="no-referrer"
+     onerror="this.onerror=null;this.src='{{ fallback }}';">
+{% endmacro %}

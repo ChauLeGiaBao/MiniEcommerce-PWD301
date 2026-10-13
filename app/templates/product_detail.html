@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_macros.html" import product_image %}
 {% block title %}{{ product.TENSPH if product else 'Không tìm thấy sản phẩm' }}{% endblock %}
 
 {% block content %}
-{# Nút quay lại: về đúng trang, danh mục, cách sắp xếp và từ khóa trước đó #}
+{# Nút quay lại: về đúng trang, danh mục, cách sắp xếp, từ khóa và khoảng giá trước đó #}
 <a href="{{ url_for('shop.products', **back_args) }}"
    class="btn btn-outline-secondary btn-sm mb-3">
     ← Quay lại
@@ -19,42 +20,50 @@
 {% else %}
 <div class="card">
     <div class="card-body">
-        <h2>{{ product.TENSPH }}</h2>
+        <div class="row g-4">
+            <div class="col-md-5">
+                {{ product_image(product, "img-fluid rounded border w-100", "320px") }}
+            </div>
 
-        {% if product.danhmuc %}
-        <p class="text-muted">
-            Danh mục: {{ product.danhmuc.TENDM }}
-        </p>
-        {% endif %}
+            <div class="col-md-7">
+                <h2>{{ product.TENSPH }}</h2>
 
-        <p>{{ product.MOTA or '' }}</p>
+                {% if product.danhmuc %}
+                <p class="text-muted">
+                    Danh mục: {{ product.danhmuc.TENDM }}
+                </p>
+                {% endif %}
 
-        <p class="fs-4 fw-bold text-danger">
-            {{ "{:,.0f}".format(product.DONGIA or 0) }} đ
-        </p>
+                <p>{{ product.MOTA or '' }}</p>
 
-        {% if product.SOLUONGTON and product.SOLUONGTON > 0 %}
-        <p class="text-success">Còn hàng: {{ product.SOLUONGTON }} sản phẩm</p>
+                <p class="fs-4 fw-bold text-danger">
+                    {{ "{:,.0f}".format(product.DONGIA or 0) }} đ
+                </p>
 
-        <form action="{{ url_for('shop.add_to_cart', product_id=product.MASANPHAM) }}"
-              method="POST"
-              class="d-inline">
-            <input type="hidden" name="next" value="{{ request.url }}">
-            <button type="submit" class="btn btn-primary">
-                Thêm vào giỏ hàng
-            </button>
-        </form>
-        {% else %}
-        <p><span class="badge bg-secondary fs-6">Hết hàng</span></p>
+                {% if product.SOLUONGTON and product.SOLUONGTON > 0 %}
+                <p class="text-success">Còn hàng: {{ product.SOLUONGTON }} sản phẩm</p>
 
-        <button class="btn btn-secondary" disabled>
-            Hết hàng
-        </button>
-        {% endif %}
+                <form action="{{ url_for('shop.add_to_cart', product_id=product.MASANPHAM) }}"
+                      method="POST"
+                      class="d-inline">
+                    <input type="hidden" name="next" value="{{ request.url }}">
+                    <button type="submit" class="btn btn-primary">
+                        Thêm vào giỏ hàng
+                    </button>
+                </form>
+                {% else %}
+                <p><span class="badge bg-secondary fs-6">Hết hàng</span></p>
 
-        <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-primary ms-2">
-            Xem giỏ hàng
-        </a>
+                <button class="btn btn-secondary" disabled>
+                    Hết hàng
+                </button>
+                {% endif %}
+
+                <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-primary ms-2">
+                    Xem giỏ hàng
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
