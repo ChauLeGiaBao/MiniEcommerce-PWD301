@@ -2,6 +2,13 @@
 -- SCRIPT KHỞI TẠO DATABASE + SEED DATA
 -- Dùng cho: MiniEcommerce-PWD301 (PWD301)
 -- Chạy 1 lần trên database rỗng (EcommerceDB)
+--
+-- Sau khi chạy script này, mở terminal ở thư mục project và chạy:
+--     flask db stamp head
+-- (để Flask-Migrate biết DB đã ở phiên bản mới nhất,
+--  nếu không flask db upgrade sẽ báo lỗi "table already exists")
+--
+-- Cách đơn giản hơn: bỏ qua file này và chạy  python seed.py
 -- ============================================
 
 -- ==== TẠO BẢNG ====
@@ -15,10 +22,10 @@ CREATE TABLE SANPHAM (
     MASANPHAM INT IDENTITY PRIMARY KEY,
     TENSPH NVARCHAR(200),
     HINHANH VARCHAR(500),
-    DONGIA MONEY,
+    DONGIA DECIMAL(18,2),
     MOTA NVARCHAR(500),
     SOLUONGTON INT DEFAULT 0,
-    TRANGTHAISPH INT DEFAULT 1,
+    TRANGTHAISPH INT DEFAULT 1,   -- 1 = Đang bán (Active), 0 = Tạm ẩn (Inactive)
     MADANHMUC INT,
     CONSTRAINT FK_DMSPH FOREIGN KEY (MADANHMUC) REFERENCES DANHMUC(MADANHMUC)
 );
@@ -27,7 +34,7 @@ CREATE TABLE NGUOIDUNG (
     MANGUOIDUNG INT IDENTITY PRIMARY KEY,
     HOTEN NVARCHAR(200) NOT NULL,
     EMAIL NVARCHAR(200),
-    SDT CHAR(10),
+    SDT VARCHAR(10),
     NGAYSINH DATE,
     PASSWORD_HASH NVARCHAR(255),
     ROLE NVARCHAR(20) DEFAULT 'customer',
@@ -36,10 +43,13 @@ CREATE TABLE NGUOIDUNG (
 
 CREATE TABLE DONHANG (
     MADONHANG INT IDENTITY PRIMARY KEY,
-    MANGUOIDUNG INT,
+    MANGUOIDUNG INT,              -- NULL nếu khách đặt hàng khi chưa đăng nhập
     NGAYDAT DATE,
-    TONGGIATRI MONEY,
-    TRANGTHAI INT DEFAULT 0,
+    TONGGIATRI DECIMAL(18,2),
+    TRANGTHAI INT DEFAULT 0,      -- 0 Mới, 1 Đang xử lý, 2 Hoàn thành, 3 Đã hủy
+    HOTENNHAN NVARCHAR(200),
+    DIACHIGIAO NVARCHAR(300),
+    SDTNHAN VARCHAR(15),
     CONSTRAINT FK_DH_USER FOREIGN KEY (MANGUOIDUNG) REFERENCES NGUOIDUNG(MANGUOIDUNG)
 );
 

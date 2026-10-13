@@ -4,7 +4,7 @@ from app.extensions import db
 class User(db.Model):
     __tablename__ = 'NGUOIDUNG'
     MANGUOIDUNG = db.Column(db.Integer, primary_key=True)
-    HOTEN = db.Column(db.Unicode(200))
+    HOTEN = db.Column(db.Unicode(200), nullable=False)
     EMAIL = db.Column(db.String(200))
     SDT = db.Column(db.String(10))
     NGAYSINH = db.Column(db.Date)

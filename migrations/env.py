@@ -50,6 +50,11 @@ def get_metadata():
         return target_db.metadatas[None]
     return target_db.metadata
 
+def include_object(object, name, type_, reflected, compare_to):
+    # Bỏ qua các bảng backup (không có trong model) để autogenerate không xóa chúng
+    if type_ == "table" and name.upper().endswith("_BACKUP"):
+        return False
+    return True
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -93,6 +98,8 @@ def run_migrations_online():
     conf_args = current_app.extensions['migrate'].configure_args
     if conf_args.get("process_revision_directives") is None:
         conf_args["process_revision_directives"] = process_revision_directives
+    if conf_args.get("include_object") is None:
+        conf_args["include_object"] = include_object
 
     connectable = get_engine()
 
