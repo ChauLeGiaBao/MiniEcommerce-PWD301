@@ -89,10 +89,59 @@
     </div>
 </div>
 
+<!-- Bộ lọc & Tìm kiếm sản phẩm -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-0 fw-semibold text-secondary">🔍 Tìm kiếm & Lọc sản phẩm</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('admin.products') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Tên sản phẩm</label>
+                <input type="text" name="q" class="form-control" placeholder="Tìm kiếm theo tên sản phẩm..." value="{{ q or '' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Danh mục</label>
+                <select name="category_id" class="form-select">
+                    <option value="">-- Tất cả danh mục --</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.MADANHMUC }}" {% if category_id and category_id|string == cat.MADANHMUC|string %}selected{% endif %}>
+                            {{ cat.TENDM }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Tồn kho</label>
+                <select name="low_stock" class="form-select">
+                    <option value="">-- Tất cả mức tồn kho --</option>
+                    <option value="1" {% if low_stock == '1' %}selected{% endif %}>⚠️ Sắp hết hàng (&le; {{ low_stock_threshold }})</option>
+                    <option value="out" {% if low_stock == 'out' %}selected{% endif %}>❌ Hết hàng (0)</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    Tìm kiếm
+                </button>
+                {% if q or category_id or low_stock %}
+                    <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                        ✕ Xóa
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Bảng danh sách sản phẩm -->
 <div class="card shadow-sm">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0 fw-semibold">Danh sách sản phẩm trong kho ({{ products|length }})</h2>
+    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center">
+        <h2 class="h5 mb-0 fw-semibold">
+            Danh sách sản phẩm trong kho ({{ pagination.total if pagination else products|length }})
+        </h2>
+        {% if q or category_id or low_stock %}
+            <span class="badge bg-info-subtle text-info border">Đang lọc kết quả</span>
+        {% endif %}
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -161,7 +210,14 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-5">
                             <div class="fs-1 mb-2">📦</div>
-                            <p class="mb-0">Chưa có sản phẩm nào trong cơ sở dữ liệu.</p>
+                            {% if q or category_id or low_stock %}
+                                <p class="mb-2 fw-semibold">Không tìm thấy sản phẩm nào phù hợp với bộ lọc tìm kiếm.</p>
+                                <a href="{{ url_for('admin.products') }}" class="btn btn-sm btn-outline-primary">
+                                    ✕ Xóa bộ lọc và xem tất cả
+                                </a>
+                            {% else %}
+                                <p class="mb-0">Chưa có sản phẩm nào trong cơ sở dữ liệu.</p>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -169,5 +225,42 @@
             </table>
         </div>
     </div>
+
+    <!-- Phân trang và bảo lưu query parameters -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="card-footer bg-white py-3 d-flex flex-wrap justify-content-between align-items-center">
+        <small class="text-muted">
+            Hiển thị <strong>{{ products|length }}</strong> / <strong>{{ pagination.total }}</strong> sản phẩm
+            (Trang {{ pagination.page }} / {{ pagination.pages }})
+        </small>
+        <nav aria-label="Product pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.products', page=pagination.prev_num, q=q or None, category_id=category_id or None, low_stock=low_stock or None) if pagination.has_prev else '#' }}">
+                        &laquo; Trước
+                    </a>
+                </li>
+
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.products', page=p, q=q or None, category_id=category_id or None, low_stock=low_stock or None) }}">
+                                {{ p }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.products', page=pagination.next_num, q=q or None, category_id=category_id or None, low_stock=low_stock or None) if pagination.has_next else '#' }}">
+                        Sau &raquo;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

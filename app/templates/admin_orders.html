@@ -35,9 +35,57 @@
 {% endif %}
 {% endwith %}
 
+<!-- Bộ lọc, Tìm kiếm & Sắp xếp đơn hàng -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-0 fw-semibold text-secondary">🔍 Tìm kiếm, Lọc & Sắp xếp đơn hàng</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('admin.orders') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Từ khóa tìm kiếm</label>
+                <input type="text" name="q" class="form-control" placeholder="Mã đơn hàng, người nhận, SĐT..." value="{{ q or '' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Trạng thái đơn hàng</label>
+                <select name="status" class="form-select">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    {% for st_val, st_name in valid_statuses.items() %}
+                        <option value="{{ st_val }}" {% if status is not none and status|string == st_val|string %}selected{% endif %}>
+                            {{ st_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Sắp xếp</label>
+                <select name="sort" class="form-select">
+                    <option value="newest" {% if sort != 'oldest' %}selected{% endif %}>Mới nhất trước</option>
+                    <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Cũ nhất trước</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    Tìm kiếm
+                </button>
+                {% if q or (status is not none and status != '') or (sort and sort == 'oldest') %}
+                    <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                        ✕ Xóa
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card shadow-sm">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0 fw-semibold">Danh sách đơn đặt hàng ({{ orders|length }})</h2>
+    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center">
+        <h2 class="h5 mb-0 fw-semibold">
+            Danh sách đơn đặt hàng ({{ pagination.total if pagination else orders|length }})
+        </h2>
+        {% if q or (status is not none and status != '') or (sort and sort == 'oldest') %}
+            <span class="badge bg-info-subtle text-info border">Đang lọc kết quả</span>
+        {% endif %}
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -105,8 +153,8 @@
                             </form>
                         </td>
                         <td class="text-end">
-                            <a href="{{ url_for('admin.order_detail', order_id=order.MADONHANG) }}" class="btn btn-sm btn-primary">
-                                Chi tiết
+                            <a href="{{ url_for('admin.order_detail', order_id=order.MADONHANG) }}" class="btn btn-sm btn-outline-primary text-nowrap">
+                                Chi tiết &rarr;
                             </a>
                         </td>
                     </tr>
@@ -114,7 +162,14 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-5">
                             <div class="fs-1 mb-2">🧾</div>
-                            <p class="mb-0">Chưa có đơn hàng nào trong hệ thống.</p>
+                            {% if q or (status is not none and status != '') or (sort and sort == 'oldest') %}
+                                <p class="mb-2 fw-semibold">Không tìm thấy đơn hàng nào phù hợp với bộ lọc tìm kiếm.</p>
+                                <a href="{{ url_for('admin.orders') }}" class="btn btn-sm btn-outline-primary">
+                                    ✕ Xóa bộ lọc và xem tất cả
+                                </a>
+                            {% else %}
+                                <p class="mb-0">Chưa có đơn hàng nào trong hệ thống.</p>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -122,5 +177,42 @@
             </table>
         </div>
     </div>
+
+    <!-- Phân trang và bảo lưu query parameters -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="card-footer bg-white py-3 d-flex flex-wrap justify-content-between align-items-center">
+        <small class="text-muted">
+            Hiển thị <strong>{{ orders|length }}</strong> / <strong>{{ pagination.total }}</strong> đơn hàng
+            (Trang {{ pagination.page }} / {{ pagination.pages }})
+        </small>
+        <nav aria-label="Order pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.orders', page=pagination.prev_num, q=q or None, status=status if (status is not none and status != '') else None, sort=sort or None) if pagination.has_prev else '#' }}">
+                        &laquo; Trước
+                    </a>
+                </li>
+
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.orders', page=p, q=q or None, status=status if (status is not none and status != '') else None, sort=sort or None) }}">
+                                {{ p }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.orders', page=pagination.next_num, q=q or None, status=status if (status is not none and status != '') else None, sort=sort or None) if pagination.has_next else '#' }}">
+                        Sau &raquo;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

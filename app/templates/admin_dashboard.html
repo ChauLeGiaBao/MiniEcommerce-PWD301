@@ -11,6 +11,9 @@
             </ol>
         </nav>
         <h1 class="h3 mb-0 fw-bold">Tổng quan quản trị (Dashboard)</h1>
+        {% if g.admin_user %}
+            <small class="text-muted">Đang đăng nhập: <strong>{{ g.admin_user.HOTEN if g.admin_user.HOTEN else 'Admin' }}</strong> <span class="badge bg-danger ms-1">ADMIN</span></small>
+        {% endif %}
     </div>
     <div class="d-flex gap-2 mt-2 mt-md-0">
         <a href="{{ url_for('admin.products') }}" class="btn btn-outline-dark">
