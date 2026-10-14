@@ -2,8 +2,9 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from flask import render_template, request, redirect, url_for, session, flash, jsonify
+from flask import render_template, request, redirect, url_for, session, flash, jsonify, abort
 from sqlalchemy.exc import SQLAlchemyError
+from flask_login import current_user
 
 from app.shop import shop_bp
 from app.extensions import db
@@ -245,8 +246,9 @@ def checkout():
             order_total += product.DONGIA * quantity
             lines.append((product, quantity))
 
+        user_id = current_user.MANGUOIDUNG if current_user.is_authenticated else None
         order = DonHang(
-            MANGUOIDUNG=None,
+            MANGUOIDUNG=user_id,
             NGAYDAT=date.today(),
             TONGGIATRI=order_total,
             TRANGTHAI=0,
@@ -279,6 +281,7 @@ def checkout():
 
     # Không xóa giỏ trước khi transaction commit thành công.
     session.pop("cart", None)
+    session["last_order_id"] = order_id
     return redirect(url_for("shop.order_success", order_id=order_id))
 
 
@@ -288,4 +291,11 @@ def order_success(order_id):
     if order is None:
         flash("Không tìm thấy đơn hàng.", "warning")
         return redirect(url_for("shop.products"))
+
+    is_last_order = session.get("last_order_id") == order_id
+    is_owner = current_user.is_authenticated and order.MANGUOIDUNG == current_user.MANGUOIDUNG
+    is_admin = current_user.is_authenticated and (getattr(current_user, "ROLE", "") or "").lower() == "admin"
+    if not (is_last_order or is_owner or is_admin):
+        abort(403)
+
     return render_template("order_success.html", order=order)
