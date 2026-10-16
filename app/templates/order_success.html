@@ -43,9 +43,11 @@
                     Tiếp tục mua sắm
                 </a>
 
-                <a href="/admin/orders" class="btn btn-outline-secondary">
+                {% if current_user.is_authenticated and (current_user.ROLE or '')|lower == 'admin' %}
+                <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-secondary">
                     Xem đơn hàng trong Admin
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
