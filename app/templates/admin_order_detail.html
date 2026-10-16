@@ -109,6 +109,9 @@
                 <div class="p-3 bg-light rounded-3 border">
                     <label class="form-label fw-semibold">Cập nhật trạng thái đơn hàng</label>
                     <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.MADONHANG) }}">
+                        {% if csrf_token %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        {% endif %}
                         <div class="input-group">
                             <select name="status" class="form-select">
                                 {% for st_val, st_name in valid_statuses.items() %}

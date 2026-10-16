@@ -6,8 +6,44 @@ from sqlalchemy import cast, func, or_, String
 from sqlalchemy.exc import IntegrityError
 
 from app.admin import admin_bp
-from app.extensions import db
+from app.extensions import db, login_manager
 from app.models import ChiTietDonHang, DanhMuc, DonHang, SanPham, User
+
+# Bổ sung các phương thức tương thích UserMixin cho User model nếu chưa có,
+# giúp Flask-Login hoạt động hoàn hảo mà không cần sửa file app/models/nguoi_dung.py
+if not hasattr(User, "get_id"):
+    User.get_id = lambda self: str(self.MANGUOIDUNG)
+if not hasattr(User, "is_authenticated"):
+    User.is_authenticated = property(lambda self: True)
+if not hasattr(User, "is_active"):
+    User.is_active = property(lambda self: getattr(self, "TRANGTHAIND", 1) == 1)
+if not hasattr(User, "is_anonymous"):
+    User.is_anonymous = property(lambda self: False)
+
+
+def _load_user_by_id(user_id):
+    """Flask-Login user loader nạp User theo khóa chính MANGUOIDUNG."""
+    try:
+        return db.session.get(User, int(user_id))
+    except (ValueError, TypeError, Exception):
+        return None
+
+
+login_manager.user_loader(_load_user_by_id)
+
+
+@admin_bp.record
+def on_admin_init(state):
+    """Đăng ký user loader mỗi khi admin_bp được mount vào một Flask app."""
+    login_manager.user_loader(_load_user_by_id)
+
+
+@admin_bp.teardown_app_request
+def cleanup_login_user(exc=None):
+    """Đảm bảo g không giữ vết user đã đăng xuất giữa các request trong cùng app context."""
+    if hasattr(g, "_login_user"):
+        del g._login_user
+
 
 # Ngưỡng số lượng tồn kho thấp thống nhất cho toàn hệ thống
 LOW_STOCK_THRESHOLD = 5
@@ -22,75 +58,34 @@ VALID_ORDER_STATUSES = {
 
 
 # ==============================================================================
-# Helper Xác Thực & Phân Quyền Admin (Bảo vệ toàn bộ /admin/*)
+# Helper Xác Thực & Phân Quyền RBAC (Bảo vệ toàn bộ /admin/*)
 # ==============================================================================
 def get_current_user():
     """
-    Lấy thông tin user hiện tại từ các nguồn xác thực có thể có:
-    1. Flask-Login current_user
-    2. Flask g (g.user / g.current_user / g.admin_user)
-    3. Session (user_id / _user_id / uid)
-    4. Session dict/object
-    5. Mock session role (đặc thù kiểm thử)
+    Lấy thông tin user hiện tại duy nhất từ Flask-Login current_user.
+    Tuân thủ LO01: Không đọc session['role'], session['user_id'] hay g.user để tự cấp quyền.
     """
-    # 1. Flask-Login current_user
     if current_user and getattr(current_user, "is_authenticated", False):
         return current_user
-
-    # 2. Flask g
-    for attr in ("current_user", "user", "admin_user"):
-        if hasattr(g, attr) and getattr(g, attr):
-            return getattr(g, attr)
-
-    # 3. Session key tra cứu DB
-    for key in ("user_id", "_user_id", "uid"):
-        uid = session.get(key)
-        if uid is not None:
-            try:
-                user_obj = db.session.get(User, int(uid))
-                if user_obj:
-                    return user_obj
-            except (ValueError, TypeError):
-                pass
-
-    # 4. Session user object hoặc dict
-    user_sess = session.get("user")
-    if user_sess:
-        if hasattr(user_sess, "ROLE") or hasattr(user_sess, "role"):
-            return user_sess
-        if isinstance(user_sess, dict):
-            uid = user_sess.get("user_id") or user_sess.get("MANGUOIDUNG") or user_sess.get("id")
-            if uid:
-                try:
-                    user_obj = db.session.get(User, int(uid))
-                    if user_obj:
-                        return user_obj
-                except (ValueError, TypeError):
-                    pass
-            return user_sess
-
-    # 5. Session mock role trực tiếp (phục vụ test môi trường không lưu user vào DB)
-    if session.get("role"):
-        return {
-            "ROLE": session.get("role"),
-            "role": session.get("role"),
-            "HOTEN": session.get("name", "Admin User"),
-        }
-
     return None
 
 
-def is_admin(user):
-    """
-    Kiểm tra xem user có quyền Admin hay không (ROLE == 'admin', không phân biệt hoa thường).
-    """
+def get_user_role(user):
+    """Lấy role chuẩn hóa của user (chữ thường, loại bỏ khoảng trắng)."""
     if not user:
-        return False
-    for attr in ("ROLE", "role"):
-        val = getattr(user, attr, None) if not isinstance(user, dict) else user.get(attr)
-        if isinstance(val, str) and val.strip().lower() == "admin":
-            return True
-    return False
+        return ""
+    role_val = getattr(user, "ROLE", None) or getattr(user, "role", None) or ""
+    return str(role_val).strip().lower()
+
+
+def is_admin(user):
+    """Kiểm tra xem user có quyền Admin hay không (ROLE == 'admin')."""
+    return get_user_role(user) == "admin"
+
+
+def is_staff(user):
+    """Kiểm tra xem user có quyền Staff hay không (ROLE == 'staff')."""
+    return get_user_role(user) == "staff"
 
 
 def admin_required(f):
@@ -111,12 +106,15 @@ def admin_required(f):
 
 
 @admin_bp.before_request
-def require_admin():
+def require_admin_or_staff():
     """
-    Bảo vệ toàn bộ các endpoint thuộc /admin/*:
-    - User chưa đăng nhập (Guest): bị chặn và chuyển hướng về /auth/login.
-    - User không có role admin: bị từ chối truy cập với lỗi 403 Forbidden.
-    - User có role admin: cho phép tiếp tục và lưu vào g.admin_user.
+    Bảo vệ toàn bộ các endpoint thuộc /admin/* theo ma trận RBAC:
+    - Guest (chưa đăng nhập qua Flask-Login): Chuyển hướng về /auth/login (hoặc 401 nếu ajax).
+    - Customer: Chặn 403 Forbidden với mọi route /admin/*.
+    - Staff: Được phép truy cập Dashboard và xem/cập nhật Đơn hàng;
+             BỊ CHẶN 403 Forbidden đối với Quản lý Sản phẩm (Product CRUD).
+    - Admin: Toàn quyền truy cập tất cả các endpoint.
+    - Tuyệt đối không nhận session['role'] giả mạo.
     """
     user = get_current_user()
     if not user:
@@ -125,10 +123,23 @@ def require_admin():
         flash("Vui lòng đăng nhập để truy cập trang quản trị.", "warning")
         return redirect(url_for("auth.login", next=request.url))
 
-    if not is_admin(user):
-        abort(403)
+    role = get_user_role(user)
 
-    g.admin_user = user
+    if role == "admin":
+        g.admin_user = user
+        return
+
+    if role == "staff":
+        # Staff chỉ được xem dashboard và quản lý orders (xem list, detail, đổi status)
+        # Chặn staff truy cập Product CRUD
+        endpoint = request.endpoint or ""
+        if "product" in endpoint:
+            abort(403)
+        g.admin_user = user
+        return
+
+    # User có role khác (customer, ...) -> 403 Forbidden
+    abort(403)
 
 
 # ==============================================================================
@@ -150,7 +161,21 @@ def dashboard():
     low_stock_count = SanPham.query.filter(SanPham.SOLUONGTON <= LOW_STOCK_THRESHOLD).count()
 
     # Thống kê doanh thu (an toàn khi DB chưa có order, scalar trả về None -> 0)
-    total_revenue = db.session.query(func.sum(DonHang.TONGGIATRI)).scalar() or 0
+    # Tuân thủ LO02: Định nghĩa rõ ràng cách tính doanh thu:
+    # - total_revenue: Tổng doanh thu từ các đơn hàng hợp lệ (loại trừ đơn đã hủy TRANGTHAI == 3)
+    # - completed_revenue: Doanh thu thực thu từ các đơn đã hoàn thành (TRANGTHAI == 2)
+    total_revenue = (
+        db.session.query(func.coalesce(func.sum(DonHang.TONGGIATRI), 0))
+        .filter(DonHang.TRANGTHAI != 3)
+        .scalar()
+        or 0
+    )
+    completed_revenue = (
+        db.session.query(func.coalesce(func.sum(DonHang.TONGGIATRI), 0))
+        .filter(DonHang.TRANGTHAI == 2)
+        .scalar()
+        or 0
+    )
 
     # Phân loại trạng thái đơn hàng
     pending_count = DonHang.query.filter_by(TRANGTHAI=0).count()
@@ -176,6 +201,7 @@ def dashboard():
         low_stock_count=low_stock_count,
         low_stock_threshold=LOW_STOCK_THRESHOLD,
         total_revenue=total_revenue,
+        completed_revenue=completed_revenue,
         pending_count=pending_count,
         processing_count=processing_count,
         completed_count=completed_count,
@@ -267,7 +293,7 @@ def products():
         if errors:
             for err in errors:
                 flash(err, "danger")
-            # Trả về trang kèm danh sách sản phẩm trang 1
+            # Trả về trang kèm danh sách sản phẩm trang 1 và bảo lưu form_data
             query = SanPham.query.order_by(SanPham.MASANPHAM.desc())
             pagination = query.paginate(page=1, per_page=10, error_out=False)
             return render_template(
@@ -279,6 +305,7 @@ def products():
                 category_id="",
                 low_stock="",
                 low_stock_threshold=LOW_STOCK_THRESHOLD,
+                form_data=request.form,
             )
         else:
             product = SanPham(
@@ -407,6 +434,12 @@ def edit_product(product_id):
         if errors:
             for err in errors:
                 flash(err, "danger")
+            return render_template(
+                "admin_product_form.html",
+                product=product,
+                categories=categories,
+                form_data=request.form,
+            )
         else:
             product.TENSPH = name
             product.HINHANH = image
@@ -431,7 +464,7 @@ def delete_product(product_id):
     """
     Xóa an toàn:
     - Sản phẩm đã nằm trong đơn hàng (ChiTietDonHang) không được xóa gây lỗi FK.
-    - Hiển thị thông báo nghiệp vụ rõ ràng thay vì lỗi 500.
+    - Hiển thị thông báo nghiệp vụ rõ ràng, gợi ý chuyển trạng thái sang Tạm ẩn.
     """
     product = db.get_or_404(SanPham, product_id)
 
@@ -439,7 +472,7 @@ def delete_product(product_id):
     if in_order:
         flash(
             f"Không thể xóa sản phẩm '#{product.MASANPHAM} - {product.TENSPH}' vì đã có trong đơn hàng tham chiếu. "
-            "Bạn có thể chuyển trạng thái sang 'Tạm ẩn' nếu muốn ngừng kinh doanh.",
+            "Bạn có thể chuyển trạng thái sang 'Tạm ẩn' nếu muốn ngừng kinh doanh mà không làm mất lịch sử đơn hàng.",
             "warning",
         )
         return redirect(url_for("admin.products"))

@@ -39,25 +39,29 @@
     </div>
     <div class="card-body">
         <form method="post">
+            {% if csrf_token %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {% endif %}
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label fw-semibold">Tên sản phẩm <span class="text-danger">*</span></label>
-                    <input name="name" class="form-control" value="{{ product.TENSPH or '' }}" maxlength="200" required>
+                    <input name="name" class="form-control" value="{{ form_data.name if form_data else (product.TENSPH or '') }}" maxlength="200" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Đơn giá (đ) <span class="text-danger">*</span></label>
-                    <input name="price" type="number" min="0" step="any" class="form-control" value="{{ product.DONGIA or 0 }}" required>
+                    <input name="price" type="number" min="0" step="any" class="form-control" value="{{ form_data.price if form_data else (product.DONGIA or 0) }}" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Số lượng tồn kho</label>
-                    <input name="stock" type="number" min="0" class="form-control" value="{{ product.SOLUONGTON or 0 }}">
+                    <input name="stock" type="number" min="0" class="form-control" value="{{ form_data.stock if form_data else (product.SOLUONGTON or 0) }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Danh mục</label>
                     <select name="category_id" class="form-select">
                         <option value="">-- Không phân loại --</option>
+                        {% set current_cat = form_data.category_id if form_data else product.MADANHMUC %}
                         {% for cat in categories %}
-                            <option value="{{ cat.MADANHMUC }}" {% if product.MADANHMUC == cat.MADANHMUC %}selected{% endif %}>
+                            <option value="{{ cat.MADANHMUC }}" {% if current_cat is not none and current_cat|string == cat.MADANHMUC|string %}selected{% endif %}>
                                 {{ cat.TENDM }}
                             </option>
                         {% endfor %}
@@ -65,18 +69,19 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Trạng thái bán</label>
+                    {% set current_status = form_data.status if form_data else product.TRANGTHAISPH %}
                     <select name="status" class="form-select">
-                        <option value="1" {% if product.TRANGTHAISPH == 1 %}selected{% endif %}>Đang bán</option>
-                        <option value="0" {% if product.TRANGTHAISPH == 0 %}selected{% endif %}>Tạm ẩn</option>
+                        <option value="1" {% if current_status|string == '1' %}selected{% endif %}>Đang bán</option>
+                        <option value="0" {% if current_status|string == '0' %}selected{% endif %}>Tạm ẩn</option>
                     </select>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-semibold">Đường dẫn hình ảnh</label>
-                    <input name="image" class="form-control" value="{{ product.HINHANH or '' }}" placeholder="VD: no-image.jpg" maxlength="500">
+                    <input name="image" class="form-control" value="{{ form_data.image if form_data else (product.HINHANH or '') }}" placeholder="VD: no-image.jpg" maxlength="500">
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-semibold">Mô tả sản phẩm</label>
-                    <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả sản phẩm..." maxlength="500">{{ product.MOTA or '' }}</textarea>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả sản phẩm..." maxlength="500">{{ form_data.description if form_data else (product.MOTA or '') }}</textarea>
                 </div>
             </div>
 

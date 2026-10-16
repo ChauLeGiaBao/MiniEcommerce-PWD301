@@ -4,11 +4,14 @@ import sys
 from datetime import date
 from urllib.parse import unquote
 
+# BẮT BUỘC gán DATABASE_URL là SQLite in-memory trước khi import app/config (LO05)
+os.environ["DATABASE_URL"] = "sqlite://"
+
 # Thêm thư mục hiện tại vào sys.path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from app import create_app
-from app.extensions import db
+from app.extensions import db, login_manager
 from app.models import ChiTietDonHang, DanhMuc, DonHang, SanPham, User
 
 
@@ -20,10 +23,13 @@ def run_tests():
     app = create_app()
     app.config["TESTING"] = True
     app.config["WTF_CSRF_ENABLED"] = False
+    login_manager.user_loader(lambda uid: db.session.get(User, int(uid)) if uid and str(uid).isdigit() else None)
 
     client = app.test_client()
 
     with app.app_context():
+        # LO05: Guard an toàn tuyệt đối chống đụng database thật
+        assert str(db.engine.url).startswith("sqlite"), "NGUY HIỂM: Không được chạy test trên database thật!"
         db.create_all()
 
         # Đảm bảo có danh mục mẫu
@@ -38,7 +44,7 @@ def run_tests():
                 db.session.add(DanhMuc(MADANHMUC=cid, TENDM=cname))
         db.session.commit()
 
-        # Tạo / lấy User Admin và User Customer để kiểm thử phân quyền
+        # Tạo / lấy User Admin, Staff và Customer để kiểm thử phân quyền RBAC
         admin_user = User.query.filter_by(EMAIL="admin@miniecommerce.com").first()
         if not admin_user:
             admin_user = User(
@@ -49,6 +55,17 @@ def run_tests():
                 TRANGTHAIND=1,
             )
             db.session.add(admin_user)
+
+        staff_user = User.query.filter_by(EMAIL="staff@miniecommerce.com").first()
+        if not staff_user:
+            staff_user = User(
+                HOTEN="Nhân Viên Vận Hành (Staff)",
+                EMAIL="staff@miniecommerce.com",
+                SDT="0908888888",
+                ROLE="staff",
+                TRANGTHAIND=1,
+            )
+            db.session.add(staff_user)
 
         customer_user = User.query.filter_by(EMAIL="customer@example.com").first()
         if not customer_user:
@@ -85,12 +102,27 @@ def run_tests():
         print("   👉 KẾT QUẢ: Guest chưa đăng nhập bị CHẶN 100% khỏi tất cả các trang /admin/*!")
 
         # ======================================================================
-        # TEST 2: BẢO VỆ /admin/* - USER KHÔNG PHẢI ADMIN BỊ CHẶN (403 FORBIDDEN)
+        # TEST 1B: CHẶN BACKDOOR SESSION GIẢ LẬP ROLE=ADMIN
         # ======================================================================
-        print("\n🔹 [Test 2] Kiểm tra bảo vệ /admin/* - User không phải Admin bị từ chối (403):")
+        print("\n🔹 [Test 1B] Kiểm tra chặn hoàn toàn backdoor session giả role=admin:")
         with client.session_transaction() as sess:
             sess.clear()
-            sess["user_id"] = customer_user.MANGUOIDUNG
+            sess["role"] = "admin"
+            sess["user_id"] = admin_user.MANGUOIDUNG
+
+        res_fake = client.get("/admin/")
+        assert res_fake.status_code == 302, f"Session giả không được phép truy cập! Nhận: {res_fake.status_code}"
+        assert "/auth/login" in res_fake.headers.get("Location", "")
+        print("   👉 KẾT QUẢ: Session giả lập role=admin bị CHẶN 100%, bắt buộc đăng nhập thật qua Flask-Login!")
+
+        # ======================================================================
+        # TEST 2: BẢO VỆ /admin/* - USER KHÔNG PHẢI ADMIN BỊ CHẶN (403 FORBIDDEN)
+        # ======================================================================
+        print("\n🔹 [Test 2] Kiểm tra bảo vệ /admin/* - User Customer bị từ chối (403):")
+        with client.session_transaction() as sess:
+            sess.clear()
+            sess["_user_id"] = str(customer_user.MANGUOIDUNG)
+            sess["_fresh"] = True
 
         res_cust_dash = client.get("/admin/")
         assert res_cust_dash.status_code == 403, f"Customer không được vào admin, nhận code: {res_cust_dash.status_code}"
@@ -103,11 +135,29 @@ def run_tests():
         print("   👉 KẾT QUẢ: User có role 'customer' bị từ chối truy cập với mã lỗi HTTP 403 Forbidden!")
 
         # ======================================================================
+        # TEST 2B: MA TRẬN RBAC CHO ROLE STAFF
+        # ======================================================================
+        print("\n🔹 [Test 2B] Kiểm tra ma trận RBAC cho Staff (Dashboard & Orders: 200, Product CRUD: 403):")
+        with client.session_transaction() as sess:
+            sess.clear()
+            sess["_user_id"] = str(staff_user.MANGUOIDUNG)
+            sess["_fresh"] = True
+
+        res_staff_dash = client.get("/admin/")
+        assert res_staff_dash.status_code == 200
+        res_staff_orders = client.get("/admin/orders")
+        assert res_staff_orders.status_code == 200
+        res_staff_prod = client.get("/admin/products")
+        assert res_staff_prod.status_code == 403
+        print("   👉 KẾT QUẢ: Staff vào được Dashboard và Orders, nhưng bị chặn 403 ở Product CRUD!")
+
+        # ======================================================================
         # ĐĂNG NHẬP VỚI QUYỀN ADMIN CHO TOÀN BỘ CÁC NGHIỆP VỤ TIẾP THEO
         # ======================================================================
         with client.session_transaction() as sess:
             sess.clear()
-            sess["user_id"] = admin_user.MANGUOIDUNG
+            sess["_user_id"] = str(admin_user.MANGUOIDUNG)
+            sess["_fresh"] = True
 
         # ======================================================================
         # TEST 3: ADMIN TRUY CẬP ĐƯỢC CÁC TRANG ADMIN (200 OK)
@@ -129,6 +179,7 @@ def run_tests():
         # TEST 4: DASHBOARD STATISTICS (DỮ LIỆU QUERY TỪ DB, KHÔNG CRASH KHI TRỐNG)
         # ======================================================================
         print("\n🔹 [Test 4] Kiểm tra Dashboard statistics khi chưa có đơn hàng:")
+        assert str(db.engine.url).startswith("sqlite"), "Chốt an toàn SQLite trước khi delete"
         ChiTietDonHang.query.delete()
         DonHang.query.delete()
         db.session.commit()
