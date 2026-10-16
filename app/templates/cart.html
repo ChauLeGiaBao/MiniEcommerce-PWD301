@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block title %}Giỏ hàng{% endblock %}
 
@@ -43,6 +44,12 @@
                     <form action="{{ url_for('shop.update_cart', product_id=item.product.MASANPHAM) }}"
                           method="POST"
                           class="d-flex gap-2">
+
+                        <!-- CSRF: Cập nhật số lượng -->
+                        <input type="hidden"
+                               name="csrf_token"
+                               value="{{ csrf_token() }}">
+
                         <input type="number"
                                name="quantity"
                                value="{{ item.quantity }}"
@@ -50,6 +57,7 @@
                                min="1"
                                max="{{ item.product.SOLUONGTON }}"
                                class="form-control form-control-sm">
+
                         <button type="submit" class="btn btn-sm btn-secondary">
                             Cập nhật
                         </button>
@@ -61,6 +69,12 @@
                 <td>
                     <form action="{{ url_for('shop.remove_from_cart', product_id=item.product.MASANPHAM) }}"
                           method="POST">
+
+                        <!-- CSRF: Xóa sản phẩm -->
+                        <input type="hidden"
+                               name="csrf_token"
+                               value="{{ csrf_token() }}">
+
                         <button type="submit" class="btn btn-danger btn-sm">
                             Xóa
                         </button>

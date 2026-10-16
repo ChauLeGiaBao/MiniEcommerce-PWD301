@@ -1,31 +1,49 @@
+
 {% extends "base.html" %}
 {% from "_macros.html" import product_image %}
-{% block title %}{{ product.TENSPH if product else 'Không tìm thấy sản phẩm' }}{% endblock %}
+
+{% block title %}
+{{ product.TENSPH if product else 'Không tìm thấy sản phẩm' }}
+{% endblock %}
 
 {% block content %}
-{# Nút quay lại: về đúng trang, danh mục, cách sắp xếp, từ khóa và khoảng giá trước đó #}
+
+{# Nút quay lại: giữ đúng trang, danh mục, bộ lọc và sắp xếp trước đó #}
 <a href="{{ url_for('shop.products', **back_args) }}"
    class="btn btn-outline-secondary btn-sm mb-3">
     ← Quay lại
 </a>
 
 {% if not product %}
+
 <div class="alert alert-warning">
     <h4 class="alert-heading">Không tìm thấy sản phẩm</h4>
+
     <p class="mb-0">
         Sản phẩm này không tồn tại hoặc đã ngừng kinh doanh.
-        <a href="{{ url_for('shop.products') }}">Xem các sản phẩm khác</a>
+
+        <a href="{{ url_for('shop.products') }}">
+            Xem các sản phẩm khác
+        </a>
     </p>
 </div>
+
 {% else %}
+
 <div class="card">
     <div class="card-body">
         <div class="row g-4">
+
             <div class="col-md-5">
-                {{ product_image(product, "img-fluid rounded border w-100", "320px") }}
+                {{ product_image(
+                    product,
+                    "img-fluid rounded border w-100",
+                    "320px"
+                ) }}
             </div>
 
             <div class="col-md-7">
+
                 <h2>{{ product.TENSPH }}</h2>
 
                 {% if product.danhmuc %}
@@ -41,30 +59,57 @@
                 </p>
 
                 {% if product.SOLUONGTON and product.SOLUONGTON > 0 %}
-                <p class="text-success">Còn hàng: {{ product.SOLUONGTON }} sản phẩm</p>
 
+                <p class="text-success">
+                    Còn hàng: {{ product.SOLUONGTON }} sản phẩm
+                </p>
+
+                <!-- Form thêm sản phẩm vào giỏ hàng -->
                 <form action="{{ url_for('shop.add_to_cart', product_id=product.MASANPHAM) }}"
                       method="POST"
                       class="d-inline">
-                    <input type="hidden" name="next" value="{{ request.url }}">
-                    <button type="submit" class="btn btn-primary">
+
+                    <!-- CSRF Protection -->
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ csrf_token() }}">
+
+                    <!-- Giữ URL để quay về đúng trang -->
+                    <input type="hidden"
+                           name="next"
+                           value="{{ request.url }}">
+
+                    <button type="submit"
+                            class="btn btn-primary">
                         Thêm vào giỏ hàng
                     </button>
+
                 </form>
+
                 {% else %}
-                <p><span class="badge bg-secondary fs-6">Hết hàng</span></p>
+
+                <p>
+                    <span class="badge bg-secondary fs-6">
+                        Hết hàng
+                    </span>
+                </p>
 
                 <button class="btn btn-secondary" disabled>
                     Hết hàng
                 </button>
+
                 {% endif %}
 
-                <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-primary ms-2">
+                <a href="{{ url_for('shop.cart') }}"
+                   class="btn btn-outline-primary ms-2">
                     Xem giỏ hàng
                 </a>
+
             </div>
         </div>
     </div>
 </div>
+
 {% endif %}
+
 {% endblock %}

@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Đăng nhập - Mini Shop{% endblock %}
@@ -48,8 +49,17 @@
                     {% endif %}
                 {% endwith %}
 
+                <!-- Login Form -->
                 <form method="POST">
 
+                    <!-- CSRF Protection -->
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <!-- Redirect to requested page after login -->
                     {% if next_url %}
                     <input
                         type="hidden"
@@ -58,6 +68,7 @@
                     >
                     {% endif %}
 
+                    <!-- Email -->
                     <div class="mb-3">
 
                         <label for="email" class="form-label">
@@ -77,6 +88,7 @@
 
                     </div>
 
+                    <!-- Password -->
                     <div class="mb-3">
 
                         <label for="password" class="form-label">
@@ -94,6 +106,7 @@
 
                     </div>
 
+                    <!-- Submit -->
                     <button
                         type="submit"
                         class="btn btn-primary w-100"
@@ -103,6 +116,7 @@
 
                 </form>
 
+                <!-- Back to shop -->
                 <div class="text-center mt-3">
 
                     <a
