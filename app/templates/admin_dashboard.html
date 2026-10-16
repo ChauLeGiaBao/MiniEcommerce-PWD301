@@ -12,13 +12,23 @@
         </nav>
         <h1 class="h3 mb-0 fw-bold">Tổng quan quản trị (Dashboard)</h1>
         {% if g.admin_user %}
-            <small class="text-muted">Đang đăng nhập: <strong>{{ g.admin_user.HOTEN if g.admin_user.HOTEN else 'Admin' }}</strong> <span class="badge bg-danger ms-1">ADMIN</span></small>
+            <small class="text-muted">Đang đăng nhập: <strong>{{ g.admin_user.HOTEN if g.admin_user.HOTEN else 'Người dùng' }}</strong>
+                {% if (g.admin_user.ROLE or g.admin_user.role or '')|lower == 'admin' %}
+                    <span class="badge bg-danger ms-1">ADMIN</span>
+                {% elif (g.admin_user.ROLE or g.admin_user.role or '')|lower == 'staff' %}
+                    <span class="badge bg-primary ms-1">STAFF</span>
+                {% else %}
+                    <span class="badge bg-secondary ms-1">{{ g.admin_user.ROLE or g.admin_user.role }}</span>
+                {% endif %}
+            </small>
         {% endif %}
     </div>
     <div class="d-flex gap-2 mt-2 mt-md-0">
+        {% if (g.admin_user.ROLE or g.admin_user.role or '')|lower == 'admin' %}
         <a href="{{ url_for('admin.products') }}" class="btn btn-outline-dark">
             📦 Quản lý sản phẩm
         </a>
+        {% endif %}
         <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-dark">
             🧾 Quản lý đơn hàng
         </a>
@@ -51,7 +61,13 @@
                     <span class="badge bg-primary-subtle text-primary fs-6 p-2 rounded-3">📦</span>
                 </div>
                 <div class="h2 mb-1 fw-bold">{{ product_count }}</div>
-                <small class="text-muted"><a href="{{ url_for('admin.products') }}" class="text-decoration-none">Xem toàn bộ kho &rarr;</a></small>
+                <small class="text-muted">
+                    {% if (g.admin_user.ROLE or g.admin_user.role or '')|lower == 'admin' %}
+                    <a href="{{ url_for('admin.products') }}" class="text-decoration-none">Xem toàn bộ kho &rarr;</a>
+                    {% else %}
+                    <span>Tổng số SKU trong hệ thống</span>
+                    {% endif %}
+                </small>
             </div>
         </div>
     </div>
@@ -83,11 +99,11 @@
         <div class="card shadow-sm h-100 border-start border-4 border-info">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted fw-semibold small text-uppercase">Tổng doanh thu</span>
+                    <span class="text-muted fw-semibold small text-uppercase">Tổng doanh thu (trừ hủy)</span>
                     <span class="badge bg-info-subtle text-info fs-6 p-2 rounded-3">💰</span>
                 </div>
                 <div class="h2 mb-1 fw-bold text-success">{{ "{:,.0f}".format(total_revenue) }} <span class="fs-6 text-muted">đ</span></div>
-                <small class="text-muted">Từ các đơn hàng</small>
+                <small class="text-muted d-block text-truncate" title="Đã hoàn thành: {{ '{:,.0f}'.format(completed_revenue) }} đ">Hoàn thành: <strong>{{ "{:,.0f}".format(completed_revenue) }} đ</strong></small>
             </div>
         </div>
     </div>
@@ -196,7 +212,9 @@
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h2 class="h5 mb-0 fw-semibold text-danger">⚠️ Cảnh báo tồn kho thấp</h2>
+                {% if (g.admin_user.ROLE or g.admin_user.role or '')|lower == 'admin' %}
                 <a href="{{ url_for('admin.products') }}" class="btn btn-sm btn-outline-dark">Kho hàng</a>
+                {% endif %}
             </div>
             <div class="card-body p-0">
                 {% if low_stock_products %}
@@ -224,9 +242,13 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
+                                    {% if (g.admin_user.ROLE or g.admin_user.role or '')|lower == 'admin' %}
                                     <a href="{{ url_for('admin.edit_product', product_id=prod.MASANPHAM) }}" class="btn btn-sm btn-outline-dark">
                                         Nhập hàng
                                     </a>
+                                    {% else %}
+                                    <span class="badge bg-secondary-subtle text-muted">Cần Admin</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}

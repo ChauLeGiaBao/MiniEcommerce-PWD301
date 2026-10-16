@@ -45,10 +45,15 @@ def seed_sample_data():
     db.session.commit()
 
 
+from app.extensions import db, login_manager  # noqa: E402
+from app.models import DanhMuc, SanPham, User  # noqa: E402
+
+
 @pytest.fixture()
 def app():
     flask_app = create_app()
-    flask_app.config.update(TESTING=True)
+    flask_app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
+    login_manager.user_loader(lambda uid: db.session.get(User, int(uid)) if uid and str(uid).isdigit() else None)
 
     with flask_app.app_context():
         # Chốt an toàn: tuyệt đối không create_all/drop_all trên DB thật

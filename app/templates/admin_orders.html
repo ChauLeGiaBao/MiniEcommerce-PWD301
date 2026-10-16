@@ -140,6 +140,9 @@
                         </td>
                         <td>
                             <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.MADONHANG) }}" class="d-flex align-items-center gap-2">
+                                {% if csrf_token %}
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                {% endif %}
                                 <select name="status" class="form-select form-select-sm">
                                     {% for st_val, st_name in valid_statuses.items() %}
                                         <option value="{{ st_val }}" {% if order.TRANGTHAI == st_val %}selected{% endif %}>
