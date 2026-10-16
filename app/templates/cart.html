@@ -18,6 +18,7 @@
 {% endwith %}
 
 {% if cart_items %}
+<div id="cart-content">
 <div class="table-responsive">
     <table class="table table-bordered align-middle">
         <thead>
@@ -31,7 +32,7 @@
         </thead>
         <tbody>
             {% for item in cart_items %}
-            <tr>
+            <tr data-cart-row data-price="{{ item.product.DONGIA }}">
                 <td>
                     {{ item.product.TENSPH }}
                 </td>
@@ -45,7 +46,9 @@
                         <input type="number"
                                name="quantity"
                                value="{{ item.quantity }}"
-                               min="0"
+                               data-saved-quantity="{{ item.quantity }}"
+                               min="1"
+                               max="{{ item.product.SOLUONGTON }}"
                                class="form-control form-control-sm">
                         <button type="submit" class="btn btn-sm btn-secondary">
                             Cập nhật
@@ -53,7 +56,7 @@
                     </form>
                 </td>
                 <td class="text-end fw-bold">
-                    {{ "{:,.0f}".format(item.subtotal) }} đ
+                    <span data-line-subtotal>{{ "{:,.0f}".format(item.subtotal) }} đ</span>
                 </td>
                 <td>
                     <form action="{{ url_for('shop.remove_from_cart', product_id=item.product.MASANPHAM) }}"
@@ -73,7 +76,7 @@
     <h4>
         Tổng cộng:
         <span class="text-danger">
-            {{ "{:,.0f}".format(total_price) }} đ
+            <span data-cart-total>{{ "{:,.0f}".format(total_price) }} đ</span>
         </span>
     </h4>
 
@@ -81,6 +84,8 @@
         Tiến hành thanh toán
     </a>
 </div>
+</div>
+<div id="cart-empty" class="alert alert-info d-none">Giỏ hàng của bạn đang trống.</div>
 {% else %}
 <div class="alert alert-info">
     Giỏ hàng của bạn đang trống.
