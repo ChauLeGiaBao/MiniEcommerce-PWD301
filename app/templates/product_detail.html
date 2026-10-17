@@ -66,5 +66,60 @@
         </div>
     </div>
 </div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h4 class="mb-1">Đánh giá sản phẩm</h4>
+        <p class="text-muted">
+            {% if review_count %}
+                <span class="text-warning fs-5">★</span>
+                <strong>{{ avg_rating }}</strong>/5 ({{ review_count }} đánh giá)
+            {% else %}
+                Chưa có đánh giá nào.
+            {% endif %}
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('shop.submit_review', id=product.MASANPHAM) }}" class="mb-4">
+            {% if csrf_token is defined %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+            <div class="mb-2">
+                <label class="form-label">Số sao</label>
+                <select name="rating" class="form-select w-auto" required>
+                    <option value="">-- Chọn --</option>
+                    {% for i in [5, 4, 3, 2, 1] %}
+                    <option value="{{ i }}">{{ i }} sao</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Nhận xét</label>
+                <textarea name="comment" class="form-control" rows="3" maxlength="1000"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Gửi đánh giá</button>
+        </form>
+        {% else %}
+        <div class="alert alert-info">
+            Vui lòng <a href="{{ url_for('auth.login') }}">đăng nhập</a> để gửi đánh giá.
+        </div>
+        {% endif %}
+
+        {% for r in reviews %}
+        <div class="border-top py-2">
+            <strong>{{ r.user.HOTEN if r.user else 'Người dùng' }}</strong>
+            <span class="text-warning">{{ '★' * r.SOSAO }}{{ '☆' * (5 - r.SOSAO) }}</span>
+            <small class="text-muted ms-2">{{ r.NGAYTAO.strftime('%d/%m/%Y') }}</small>
+            {% if r.NOIDUNG %}<p class="mb-0">{{ r.NOIDUNG }}</p>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
 {% endif %}
 {% endblock %}
