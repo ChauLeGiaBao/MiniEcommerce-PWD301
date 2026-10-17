@@ -3,6 +3,9 @@ from app.extensions import db
 
 class SanPham(db.Model):
     __tablename__ = 'SANPHAM'
+    __table_args__ = (
+        db.CheckConstraint('SOLUONGTON >= 0', name='CK_SANPHAM_SOLUONGTON'),
+    )
     MASANPHAM = db.Column(db.Integer, primary_key=True)
     TENSPH = db.Column(db.Unicode(200))
     HINHANH = db.Column(db.String(500))
