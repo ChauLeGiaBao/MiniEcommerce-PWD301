@@ -185,3 +185,10 @@ erDiagram
         datetime NGAYTAO
     }
 ```
+## Ràng buộc tồn kho và dữ liệu demo
+
+- `SANPHAM`: `CHECK (SOLUONGTON >= 0)` (tên `CK_SANPHAM_SOLUONGTON`), không cho tồn kho âm.
+- Migration: `4877af4546c5_add_stock_non_negative_check.py` (sau `b9953ac12c5e`).
+- `seed.py` có thêm 3 sản phẩm demo: hết hàng (tồn 0), sắp hết hàng (tồn 3), tạm ẩn (TRANGTHAISPH = 0). Chạy lặp không bị trùng (kiểm tra theo tên sản phẩm).
+- Chuỗi migration hiện tại: `f14dcd86bf53` → `b2a434abe7a9` → `c562dfbd1758` → `b9953ac12c5e` → `4877af4546c5`.
+- Không dùng `python seed.py --reset` trên DB đang có dữ liệu thật.
