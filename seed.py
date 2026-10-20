@@ -62,6 +62,12 @@ SAN_PHAM = [
     ("Quần culottes nữ", 350000, "Ống rộng thoải mái, phong cách trẻ trung", 18, 22),
 ]
 
+# (tên, đơn giá, mô tả, số lượng tồn, mã danh mục, trạng thái: 1 đang bán / 0 tạm ẩn)
+SAN_PHAM_DEMO = [
+    ("Tai nghe Bluetooth X1", 450000, "Demo sản phẩm hết hàng", 0, 11, 1),
+    ("Sạc nhanh 20W", 290000, "Demo sản phẩm sắp hết hàng", 3, 11, 1),
+    ("Ốp lưng iPhone 14", 120000, "Demo sản phẩm tạm ẩn", 20, 11, 0),
+]
 
 def table_names():
     return {name.upper() for name in inspect(db.engine).get_table_names()}
@@ -122,6 +128,27 @@ def seed_products():
     db.session.commit()
     print(f"✔ Đã thêm {len(SAN_PHAM)} sản phẩm.")
 
+def seed_demo_products():
+    """Thêm sản phẩm demo (hết hàng, sắp hết, tạm ẩn). Chạy lặp không bị trùng."""
+    added = 0
+    for ten, gia, mo_ta, ton, ma_dm, trang_thai in SAN_PHAM_DEMO:
+        if SanPham.query.filter_by(TENSPH=ten).first():
+            continue
+        db.session.add(SanPham(
+            TENSPH=ten,
+            HINHANH="no-image.jpg",
+            DONGIA=gia,
+            MOTA=mo_ta,
+            SOLUONGTON=ton,
+            TRANGTHAISPH=trang_thai,
+            MADANHMUC=ma_dm,
+        ))
+        added += 1
+    db.session.commit()
+    if added:
+        print(f"✔ Đã thêm {added} sản phẩm demo.")
+    else:
+        print("• Sản phẩm demo đã có, bỏ qua.")
 
 def main():
     app = create_app()
@@ -135,6 +162,7 @@ def main():
         create_tables()
         seed_categories()
         seed_products()
+        seed_demo_products()
 
         print(f"Xong! Hiện có {DanhMuc.query.count()} danh mục, {SanPham.query.count()} sản phẩm.")
 

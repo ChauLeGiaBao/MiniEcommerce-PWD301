@@ -3,3 +3,4 @@ from app.models.san_pham import SanPham
 from app.models.nguoi_dung import User
 from app.models.don_hang import DonHang
 from app.models.chi_tiet_don_hang import ChiTietDonHang
+from app.models.danh_gia import DanhGia

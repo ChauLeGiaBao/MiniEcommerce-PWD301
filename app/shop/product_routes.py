@@ -1,6 +1,12 @@
-from flask import render_template, request
+from flask import abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 
+from app.extensions import db
+from app.models import SanPham
 from app.services import product_service
+from app.services.review_service import (
+    ReviewError, add_review, get_rating_summary, get_reviews,
+)
 from app.shop import shop_bp
 
 
@@ -63,8 +69,36 @@ def product_detail(id):
             back_args=back_args,
         ), 404
 
+    avg_rating, review_count = get_rating_summary(product.MASANPHAM)
     return render_template(
         "product_detail.html",
         product=product,
         back_args=back_args,
+        reviews=get_reviews(product.MASANPHAM),
+        avg_rating=avg_rating,
+        review_count=review_count,
     )
+
+
+@shop_bp.route("/products/<int:id>/reviews", methods=["POST"])
+def submit_review(id):
+    product = db.session.get(SanPham, id)
+    if product is None or product.TRANGTHAISPH != 1:
+        abort(404)
+
+    if not current_user.is_authenticated:
+        flash("Vui lòng đăng nhập để gửi đánh giá.", "warning")
+        return redirect(url_for("auth.login"))
+
+    try:
+        add_review(
+            current_user.MANGUOIDUNG,
+            id,
+            request.form.get("rating"),
+            request.form.get("comment"),
+        )
+        flash("Cảm ơn bạn đã đánh giá sản phẩm.", "success")
+    except ReviewError as e:
+        flash(str(e), "danger")
+
+    return redirect(url_for("shop.product_detail", id=id))

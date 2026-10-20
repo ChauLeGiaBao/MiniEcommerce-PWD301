@@ -146,3 +146,49 @@ Hai bảng `DANHMUC_BACKUP` và `SANPHAM_BACKUP` (bản sao lưu cũ, không thu
 - `CHITIETDONHANG` không lưu đơn giá tại thời điểm mua, nên đổi giá sản phẩm sẽ làm thành tiền từng dòng trong đơn cũ hiển thị theo giá mới (`TONGGIATRI` của đơn vẫn giữ nguyên giá lúc đặt).
 - Chưa có cột ngày tạo cho sản phẩm.
 - Chưa có CHECK constraint cho giá và tồn kho; việc kiểm tra hiện nằm ở tầng form admin.
+
+## Bảng DANHGIA (đánh giá sản phẩm, quan hệ M:N User - Product)
+
+Bảng liên kết thật sự giữa `NGUOIDUNG` và `SANPHAM`: một user đánh giá nhiều sản phẩm,
+một sản phẩm được nhiều user đánh giá.
+
+| Cột | Kiểu | Ràng buộc |
+|---|---|---|
+| MADANHGIA | INT | PK, tự tăng |
+| MANGUOIDUNG | INT | NOT NULL, FK -> NGUOIDUNG.MANGUOIDUNG |
+| MASANPHAM | INT | NOT NULL, FK -> SANPHAM.MASANPHAM |
+| SOSAO | INT | NOT NULL, CHECK (SOSAO BETWEEN 1 AND 5) |
+| NOIDUNG | NVARCHAR(1000) | NULL |
+| NGAYTAO | DATETIME | NOT NULL |
+
+- `UNIQUE (MANGUOIDUNG, MASANPHAM)` (tên `UQ_DANHGIA_USER_SP`): mỗi user chỉ đánh giá 1 lần cho mỗi sản phẩm.
+- `CHECK` tên `CK_DANHGIA_SOSAO`: chặn điểm ngoài khoảng 1-5.
+- Migration: `b9953ac12c5e_add_danhgia_review_table.py` (sau `c562dfbd1758`).
+- Policy hiện tại: chưa yêu cầu đã mua hàng mới được đánh giá (chờ nhóm xác nhận).
+
+```mermaid
+erDiagram
+    NGUOIDUNG ||--o{ DANHGIA : "viet"
+    SANPHAM ||--o{ DANHGIA : "co"
+    NGUOIDUNG {
+        int MANGUOIDUNG PK
+    }
+    SANPHAM {
+        int MASANPHAM PK
+    }
+    DANHGIA {
+        int MADANHGIA PK
+        int MANGUOIDUNG FK
+        int MASANPHAM FK
+        int SOSAO
+        string NOIDUNG
+        datetime NGAYTAO
+    }
+```
+## Ràng buộc tồn kho và dữ liệu demo
+
+- `SANPHAM`: `CHECK (SOLUONGTON >= 0)` (tên `CK_SANPHAM_SOLUONGTON`), không cho tồn kho âm.
+- Migration: `4877af4546c5_add_stock_non_negative_check.py` (sau `b9953ac12c5e`).
+- `seed.py` có thêm 3 sản phẩm demo: hết hàng (tồn 0), sắp hết hàng (tồn 3), tạm ẩn (TRANGTHAISPH = 0). Chạy lặp không bị trùng (kiểm tra theo tên sản phẩm).
+- Chuỗi migration hiện tại: `f14dcd86bf53` → `b2a434abe7a9` → `c562dfbd1758` → `b9953ac12c5e` → `4877af4546c5`.
+- Không dùng `python seed.py --reset` trên DB đang có dữ liệu thật.
