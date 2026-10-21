@@ -12,12 +12,17 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Vui lòng đăng nhập để tiếp tục."
+    login_manager.login_message_category = "warning"
 
-    # Temporary user loader for Week 1.
-    # Kiên/Auth module sẽ thay bằng User.query.get(...) sau.
     @login_manager.user_loader
     def load_user(user_id):
-        return None
+        from app.models import User
+        try:
+            return db.session.get(User, int(user_id))
+        except (TypeError, ValueError):
+            return None
 
     from app.auth import auth_bp
     from app.shop import shop_bp

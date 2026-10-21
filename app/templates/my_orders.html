@@ -1,21 +1,63 @@
 {% extends "base.html" %}
 {% block title %}Đơn hàng của tôi{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">Đơn hàng của tôi</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Đơn hàng của tôi</h2>
+    <a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary">Tiếp tục mua sắm</a>
+</div>
+
 {% if orders %}
-<div class="table-responsive"><table class="table table-striped align-middle">
-<thead><tr><th>Mã đơn</th><th>Ngày đặt</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead>
-<tbody>
-{% for order in orders %}
-<tr>
-<td>#{{ order.MADONHANG }}</td>
-<td>{{ order.NGAYDAT.strftime("%d/%m/%Y") if order.NGAYDAT else "—" }}</td>
-<td>{{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</td>
-<td>{{ {0:"Chờ xác nhận",1:"Đã xác nhận",2:"Đang giao",3:"Hoàn tất"}.get(order.TRANGTHAI, "Không xác định") }}</td>
-<td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('shop.my_order_detail', order_id=order.MADONHANG) }}">Chi tiết</a></td>
-</tr>
-{% endfor %}
-</tbody></table></div>
-{% else %}<div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>{% endif %}
-<a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary">Tiếp tục mua sắm</a>
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="ps-3">Mã đơn</th>
+                    <th scope="col">Ngày đặt</th>
+                    <th scope="col">Tổng tiền</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col" class="text-end pe-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td class="ps-3 fw-bold">#{{ order.MADONHANG }}</td>
+                    <td>{{ order.NGAYDAT.strftime("%d/%m/%Y") if order.NGAYDAT else "—" }}</td>
+                    <td class="fw-semibold text-danger">{{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</td>
+                    <td>
+                        {% if order.TRANGTHAI == 0 %}
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                        {% elif order.TRANGTHAI == 1 %}
+                            <span class="badge bg-info text-dark">Đã xác nhận</span>
+                        {% elif order.TRANGTHAI == 2 %}
+                            <span class="badge bg-primary">Đang giao</span>
+                        {% elif order.TRANGTHAI == 3 %}
+                            <span class="badge bg-success">Hoàn tất</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Không xác định</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('shop.my_order_detail', order_id=order.MADONHANG) }}">
+                            Chi tiết
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card p-5 text-center shadow-sm border-0">
+    <div class="text-muted mb-3 fs-1">📦</div>
+    <h5 class="text-muted">Bạn chưa có đơn hàng nào</h5>
+    <p class="text-muted small">Hãy dạo quanh cửa hàng và chọn cho mình sản phẩm ưng ý nhé!</p>
+    <div>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-primary mt-2">Bắt đầu mua sắm</a>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

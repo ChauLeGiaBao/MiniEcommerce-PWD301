@@ -71,7 +71,7 @@ def test_checkout_success_creates_order_detail_and_decrements_stock(client):
     c, product_id = client
     c.post(f"/cart/add/{product_id}", headers={"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"})
     with c.session_transaction() as sess:
-        sess["cart"][str(product_id)] = 2
+        sess["cart"] = {str(product_id): 2}
     response = c.post("/checkout", data={
         "fullname": "Nguyen Van A", "address": "123 Duong A", "phone": "0912345678"
     })
@@ -172,3 +172,140 @@ def test_checkout_database_failure_rolls_back_and_keeps_cart(client, monkeypatch
         assert db.session.get(SanPham, product_id).SOLUONGTON == 5
     with c.session_transaction() as sess:
         assert sess["cart"][str(product_id)] == 1
+
+
+def test_customer_checkout_records_user_id(client):
+    c, product_id = client
+    with c.application.app_context():
+        user = User(HOTEN="Customer A", EMAIL="customera@example.com", ROLE="customer")
+        db.session.add(user)
+        db.session.commit()
+        user_id = user.MANGUOIDUNG
+
+    with c.session_transaction() as sess:
+        sess["_user_id"] = str(user_id)
+        sess["_fresh"] = True
+        sess["cart"] = {str(product_id): 1}
+
+    response = c.post("/checkout", data={
+        "fullname": "Customer A", "address": "123 Le Loi", "phone": "0987654321"
+    })
+    assert response.status_code in (302, 303)
+    with c.application.app_context():
+        order = db.session.query(DonHang).filter_by(MANGUOIDUNG=user_id).one()
+        assert order.HOTENNHAN == "Customer A"
+        assert order.MANGUOIDUNG == user_id
+
+
+def test_order_success_access_control_and_idor(client):
+    c, _ = client
+    with c.application.app_context():
+        user_a = User(HOTEN="User A", EMAIL="a@example.com", ROLE="customer")
+        user_b = User(HOTEN="User B", EMAIL="b@example.com", ROLE="customer")
+        admin = User(HOTEN="Admin", EMAIL="admin@example.com", ROLE="admin")
+        db.session.add_all([user_a, user_b, admin])
+        db.session.commit()
+
+        order_a = DonHang(
+            MANGUOIDUNG=user_a.MANGUOIDUNG, NGAYDAT=__import__("datetime").date.today(),
+            TONGGIATRI=10000, TRANGTHAI=0, HOTENNHAN="User A",
+            DIACHIGIAO="Address A", SDTNHAN="0912345678"
+        )
+        db.session.add(order_a)
+        db.session.commit()
+        order_a_id = order_a.MADONHANG
+        uid_a = user_a.MANGUOIDUNG
+        uid_b = user_b.MANGUOIDUNG
+        uid_admin = admin.MANGUOIDUNG
+
+    # User A (owner) can view order A
+    with c.session_transaction() as sess:
+        sess["_user_id"] = str(uid_a)
+        sess["_fresh"] = True
+    assert c.get(f"/order-success/{order_a_id}").status_code == 200
+
+    # User B (different customer) cannot view order A -> 403 Forbidden
+    with c.session_transaction() as sess:
+        sess["_user_id"] = str(uid_b)
+        sess["_fresh"] = True
+    assert c.get(f"/order-success/{order_a_id}").status_code == 403
+
+    # Admin can view order A
+    with c.session_transaction() as sess:
+        sess["_user_id"] = str(uid_admin)
+        sess["_fresh"] = True
+    assert c.get(f"/order-success/{order_a_id}").status_code == 200
+
+
+def test_order_success_get_f5_is_idempotent(client):
+    c, product_id = client
+    with c.session_transaction() as sess:
+        sess["cart"] = {str(product_id): 1}
+
+    response = c.post("/checkout", data={
+        "fullname": "Guest", "address": "Address", "phone": "0912345678"
+    })
+    assert response.status_code in (302, 303)
+    order_id = response.headers.get("Location").split("/")[-1]
+
+    # Simulating F5 refresh on order success
+    res1 = c.get(f"/order-success/{order_id}")
+    res2 = c.get(f"/order-success/{order_id}")
+    assert res1.status_code == 200
+    assert res2.status_code == 200
+    with c.application.app_context():
+        assert db.session.query(DonHang).count() == 1
+
+
+def test_my_orders_requires_login(client):
+    c, _ = client
+    response = c.get("/my-orders")
+    assert response.status_code == 302
+    assert "/auth/login" in response.headers.get("Location", "")
+
+
+def test_my_orders_shows_only_current_user_orders(client):
+    c, _ = client
+    with c.application.app_context():
+        user_a = User(HOTEN="User A", EMAIL="a@example.com", ROLE="customer")
+        user_b = User(HOTEN="User B", EMAIL="b@example.com", ROLE="customer")
+        db.session.add_all([user_a, user_b])
+        db.session.commit()
+
+        order_a = DonHang(MANGUOIDUNG=user_a.MANGUOIDUNG, NGAYDAT=__import__("datetime").date.today(),
+                          TONGGIATRI=50000, TRANGTHAI=0, HOTENNHAN="User A", DIACHIGIAO="HN", SDTNHAN="0912345678")
+        order_b = DonHang(MANGUOIDUNG=user_b.MANGUOIDUNG, NGAYDAT=__import__("datetime").date.today(),
+                          TONGGIATRI=99000, TRANGTHAI=1, HOTENNHAN="User B", DIACHIGIAO="SG", SDTNHAN="0987654321")
+        db.session.add_all([order_a, order_b])
+        db.session.commit()
+        uid_a = user_a.MANGUOIDUNG
+        order_a_id = order_a.MADONHANG
+        order_b_id = order_b.MADONHANG
+
+    with c.session_transaction() as sess:
+        sess["_user_id"] = str(uid_a)
+        sess["_fresh"] = True
+
+    # List only contains user_a orders
+    response = c.get("/my-orders")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert f"#{order_a_id}" in html
+    assert f"#{order_b_id}" not in html
+
+    # Detail of own order
+    detail_res = c.get(f"/my-orders/{order_a_id}")
+    assert detail_res.status_code == 200
+
+    # Detail of other user's order returns 404
+    other_detail_res = c.get(f"/my-orders/{order_b_id}")
+    assert other_detail_res.status_code == 404
+
+
+def test_cart_page_renders_with_items_without_error(client):
+    c, product_id = client
+    with c.session_transaction() as sess:
+        sess["cart"] = {str(product_id): 2}
+    response = c.get("/cart")
+    assert response.status_code == 200
+    assert "Giỏ hàng của bạn" in response.get_data(as_text=True)

@@ -1,6 +1,31 @@
-__pycache__/ 
-*.pyc 
-instance/ 
-venv/ 
-.env 
-.vscode/ 
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database & local data
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Pytest & coverage
+.pytest_cache/
+.coverage
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+

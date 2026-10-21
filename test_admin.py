@@ -4,6 +4,10 @@ import sys
 from datetime import date
 from urllib.parse import unquote
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # BẮT BUỘC gán DATABASE_URL là SQLite in-memory trước khi import app/config (LO05)
 os.environ["DATABASE_URL"] = "sqlite://"
 
