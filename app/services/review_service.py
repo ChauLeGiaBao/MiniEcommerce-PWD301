@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import Float, cast, func
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
@@ -21,7 +21,7 @@ def get_reviews(product_id):
 
 def get_rating_summary(product_id):
     avg, count = db.session.query(
-        func.avg(DanhGia.SOSAO), func.count(DanhGia.MADANHGIA)
+        func.avg(cast(DanhGia.SOSAO, Float)), func.count(DanhGia.MADANHGIA)
     ).filter(DanhGia.MASANPHAM == product_id).one()
     return (round(float(avg), 1) if avg is not None else 0.0), count
 

@@ -124,3 +124,10 @@ def test_xss_comment_is_escaped(review_client):
     page = review_client.get("/products/1").data.decode("utf-8")
     assert "<script>alert(1)</script>" not in page
     assert "&lt;script&gt;" in page
+
+def test_average_keeps_decimal(review_app):
+    add_review(1, 1, "5", "")
+    add_review(2, 1, "4", "")
+    avg, count = get_rating_summary(1)
+    assert count == 2
+    assert avg == 4.5

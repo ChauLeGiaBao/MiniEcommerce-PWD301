@@ -17,6 +17,8 @@ depends_on = None
 
 
 def upgrade():
+    # Đưa tồn kho âm (nếu có) về 0 trước khi thêm ràng buộc
+    op.execute("UPDATE SANPHAM SET SOLUONGTON = 0 WHERE SOLUONGTON < 0")
     op.create_check_constraint(
         'CK_SANPHAM_SOLUONGTON', 'SANPHAM', 'SOLUONGTON >= 0'
     )
