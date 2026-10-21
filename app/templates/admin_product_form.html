@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Sửa sản phẩm #{{ product.MASANPHAM }} - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 text-muted small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">Admin</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.products') }}" class="text-decoration-none">Sản phẩm</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sửa #{{ product.MASANPHAM }}</li>
+            </ol>
+        </nav>
+        <h1 class="h3 mb-0 fw-bold">Chỉnh sửa sản phẩm #{{ product.MASANPHAM }}</h1>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary">
+            &larr; Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    <div class="mb-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endwith %}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-0 fw-semibold">Thông tin sản phẩm</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% if csrf_token %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {% endif %}
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Tên sản phẩm <span class="text-danger">*</span></label>
+                    <input name="name" class="form-control" value="{{ form_data.name if form_data else (product.TENSPH or '') }}" maxlength="200" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Đơn giá (đ) <span class="text-danger">*</span></label>
+                    <input name="price" type="number" min="0" step="any" class="form-control" value="{{ form_data.price if form_data else (product.DONGIA or 0) }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Số lượng tồn kho</label>
+                    <input name="stock" type="number" min="0" class="form-control" value="{{ form_data.stock if form_data else (product.SOLUONGTON or 0) }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Danh mục</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">-- Không phân loại --</option>
+                        {% set current_cat = form_data.category_id if form_data else product.MADANHMUC %}
+                        {% for cat in categories %}
+                            <option value="{{ cat.MADANHMUC }}" {% if current_cat is not none and current_cat|string == cat.MADANHMUC|string %}selected{% endif %}>
+                                {{ cat.TENDM }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Trạng thái bán</label>
+                    {% set current_status = form_data.status if form_data else product.TRANGTHAISPH %}
+                    <select name="status" class="form-select">
+                        <option value="1" {% if current_status|string == '1' %}selected{% endif %}>Đang bán</option>
+                        <option value="0" {% if current_status|string == '0' %}selected{% endif %}>Tạm ẩn</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Đường dẫn hình ảnh</label>
+                    <input name="image" class="form-control" value="{{ form_data.image if form_data else (product.HINHANH or '') }}" placeholder="VD: no-image.jpg" maxlength="500">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Mô tả sản phẩm</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả sản phẩm..." maxlength="500">{{ form_data.description if form_data else (product.MOTA or '') }}</textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary">
+                    Hủy bỏ
+                </a>
+                <button type="submit" class="btn btn-dark px-4">
+                    Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

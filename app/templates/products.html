@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_image %}
+{% block title %}Danh sách sản phẩm{% endblock %}
+
+{% block content %}
+{# Bộ lọc hiện tại. Giá trị None sẽ tự bị bỏ khỏi URL, nên link luôn gọn và không mất tham số #}
+{% set filter_args = {
+    'category': selected_category,
+    'sort': selected_sort,
+    'q': keyword,
+    'min_price': min_price,
+    'max_price': max_price
+} %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Danh sách sản phẩm</h2>
+    <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-primary">
+        Xem giỏ hàng
+    </a>
+</div>
+
+{% for w in warnings %}
+<div class="alert alert-warning py-2">{{ w }}</div>
+{% endfor %}
+
+{# Tìm kiếm + khoảng giá + sắp xếp: dùng chung 1 form để giữ mọi bộ lọc khi bấm Tìm/đổi sort #}
+<form method="get" action="{{ url_for('shop.products') }}" class="row g-2 mb-3">
+    {% if selected_category %}
+    <input type="hidden" name="category" value="{{ selected_category }}">
+    {% endif %}
+
+    <div class="col-md-4">
+        <input type="text" name="q" value="{{ keyword or '' }}"
+               class="form-control" placeholder="Tìm theo tên hoặc mô tả...">
+    </div>
+
+    <div class="col-md-2">
+        <input type="number" name="min_price" min="0" step="any"
+               value="{{ min_price if min_price is not none else '' }}"
+               class="form-control" placeholder="Giá từ (đ)">
+    </div>
+
+    <div class="col-md-2">
+        <input type="number" name="max_price" min="0" step="any"
+               value="{{ max_price if max_price is not none else '' }}"
+               class="form-control" placeholder="Giá đến (đ)">
+    </div>
+
+    <div class="col-md-2">
+        <select name="sort" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Sắp xếp --</option>
+            <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>
+                Mới nhất
+            </option>
+            <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>
+                Giá tăng dần
+            </option>
+            <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>
+                Giá giảm dần
+            </option>
+            <option value="name_asc" {% if selected_sort == 'name_asc' %}selected{% endif %}>
+                Tên A-Z
+            </option>
+            <option value="name_desc" {% if selected_sort == 'name_desc' %}selected{% endif %}>
+                Tên Z-A
+            </option>
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-fill">Lọc</button>
+        {% if keyword or min_price is not none or max_price is not none %}
+        <a href="{{ url_for('shop.products', category=selected_category, sort=selected_sort) }}"
+           class="btn btn-outline-secondary">Xóa</a>
+        {% endif %}
+    </div>
+</form>
+
+{# Lọc theo danh mục: giữ nguyên từ khóa, khoảng giá, sort; về lại trang 1 #}
+<div class="mb-4 d-flex flex-wrap gap-2">
+    <a href="{{ url_for('shop.products', sort=selected_sort, q=keyword, min_price=min_price, max_price=max_price) }}"
+       class="btn btn-sm {{ 'btn-dark' if not selected_category else 'btn-outline-dark' }}">
+        Tất cả
+    </a>
+
+    {% for dm in categories %}
+    <a href="{{ url_for('shop.products', category=dm.MADANHMUC, sort=selected_sort, q=keyword, min_price=min_price, max_price=max_price) }}"
+       class="btn btn-sm {{ 'btn-dark' if selected_category == dm.MADANHMUC else 'btn-outline-dark' }}">
+        {{ dm.TENDM }}
+    </a>
+    {% endfor %}
+</div>
+
+<p class="text-muted small">
+    Tìm thấy {{ pagination.total }} sản phẩm
+    {% if keyword %} cho từ khóa "<strong>{{ keyword }}</strong>"{% endif %}
+</p>
+
+<div class="row">
+    {% for sp in products %}
+    {% set detail_url = url_for(
+        'shop.product_detail',
+        id=sp.MASANPHAM,
+        back_page=pagination.page,
+        back_category=selected_category,
+        back_sort=selected_sort,
+        back_q=keyword,
+        back_min_price=min_price,
+        back_max_price=max_price
+    ) %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <a href="{{ detail_url }}">
+                {{ product_image(sp, "card-img-top", "180px") }}
+            </a>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">
+                    <a href="{{ detail_url }}" class="text-decoration-none text-dark">
+                        {{ sp.TENSPH }}
+                    </a>
+                </h5>
+
+                {% if sp.danhmuc %}
+                <p class="small text-muted mb-1">{{ sp.danhmuc.TENDM }}</p>
+                {% endif %}
+
+                <p class="card-text text-muted">{{ sp.MOTA or '' }}</p>
+
+                <p class="fw-bold text-danger">
+                    {{ "{:,.0f}".format(sp.DONGIA or 0) }} đ
+                </p>
+
+                {% if sp.SOLUONGTON and sp.SOLUONGTON > 0 %}
+                <p class="small text-success">Còn hàng: {{ sp.SOLUONGTON }} sản phẩm</p>
+                {% else %}
+                <p class="small"><span class="badge bg-secondary">Hết hàng</span></p>
+                {% endif %}
+
+                <div class="mt-auto d-flex gap-2">
+                    <a href="{{ detail_url }}" class="btn btn-outline-primary btn-sm">
+                        Chi tiết
+                    </a>
+
+                    {% if sp.SOLUONGTON and sp.SOLUONGTON > 0 %}
+                    <form action="{{ url_for('shop.add_to_cart', product_id=sp.MASANPHAM) }}"
+                          method="POST">
+                        <input type="hidden" name="next" value="{{ request.full_path }}">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Thêm vào giỏ
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        Hết hàng
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-light border">
+            Không có sản phẩm phù hợp với bộ lọc hiện tại.
+            <a href="{{ url_for('shop.products') }}">Xem tất cả sản phẩm</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+            <a class="page-link"
+               href="{{ url_for('shop.products', page=pagination.prev_num, **filter_args) if pagination.has_prev else '#' }}">
+                «
+            </a>
+        </li>
+
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+            <li class="page-item {{ 'active' if p == pagination.page }}">
+                <a class="page-link"
+                   href="{{ url_for('shop.products', page=p, **filter_args) }}">
+                    {{ p }}
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">…</span>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+            <a class="page-link"
+               href="{{ url_for('shop.products', page=pagination.next_num, **filter_args) if pagination.has_next else '#' }}">
+                »
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

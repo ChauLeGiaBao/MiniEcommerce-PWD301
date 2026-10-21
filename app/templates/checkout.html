@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Thanh toán{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-7">
+        <h2 class="mb-4">Thông tin nhận hàng</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.fullname.label(class="form-label") }}
+                {{ form.fullname(class="form-control", autocomplete="name") }}
+                {% for error in form.fullname.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.address.label(class="form-label") }}
+                {{ form.address(class="form-control", rows="3", autocomplete="street-address") }}
+                {% for error in form.address.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.phone.label(class="form-label") }}
+                {{ form.phone(class="form-control", autocomplete="tel") }}
+                {% for error in form.phone.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-secondary">Quay lại giỏ hàng</a>
+                {{ form.submit(class="btn btn-success") }}
+            </div>
+        </form>
+    </div>
+    <div class="col-md-5">
+        <h4 class="mb-3">Đơn hàng</h4>
+        <div class="card"><div class="card-body">
+            {% for item in cart_items %}
+            <div class="d-flex justify-content-between mb-2">
+                <span>{{ item.product.TENSPH }} × {{ item.quantity }}</span>
+                <span>{{ "{:,.0f}".format(item.subtotal) }} đ</span>
+            </div>
+            {% endfor %}
+            <hr>
+            <div class="d-flex justify-content-between fw-bold">
+                <span>Tổng cộng</span>
+                <span class="text-danger">{{ "{:,.0f}".format(total_price) }} đ</span>
+            </div>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Đơn hàng của tôi{% endblock %}
+{% block content %}
+<h2 class="mb-4">Đơn hàng của tôi</h2>
+{% if orders %}
+<div class="table-responsive"><table class="table table-striped align-middle">
+<thead><tr><th>Mã đơn</th><th>Ngày đặt</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead>
+<tbody>
+{% for order in orders %}
+<tr>
+<td>#{{ order.MADONHANG }}</td>
+<td>{{ order.NGAYDAT.strftime("%d/%m/%Y") if order.NGAYDAT else "—" }}</td>
+<td>{{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</td>
+<td>{{ {0:"Chờ xác nhận",1:"Đã xác nhận",2:"Đang giao",3:"Hoàn tất"}.get(order.TRANGTHAI, "Không xác định") }}</td>
+<td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('shop.my_order_detail', order_id=order.MADONHANG) }}">Chi tiết</a></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}<div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>{% endif %}
+<a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary">Tiếp tục mua sắm</a>
+{% endblock %}

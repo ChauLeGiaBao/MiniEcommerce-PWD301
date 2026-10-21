@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Chi tiết đơn hàng{% endblock %}
+{% block content %}
+<h2 class="mb-3">Chi tiết đơn hàng #{{ order.MADONHANG }}</h2>
+<div class="card mb-4"><div class="card-body">
+<p><strong>Ngày đặt:</strong> {{ order.NGAYDAT.strftime("%d/%m/%Y") if order.NGAYDAT else "—" }}</p>
+<p><strong>Trạng thái:</strong> {{ {0:"Chờ xác nhận",1:"Đã xác nhận",2:"Đang giao",3:"Hoàn tất"}.get(order.TRANGTHAI, "Không xác định") }}</p>
+<p><strong>Người nhận:</strong> {{ order.HOTENNHAN }}</p><p><strong>Địa chỉ:</strong> {{ order.DIACHIGIAO }}</p>
+<p><strong>Số điện thoại:</strong> {{ order.SDTNHAN }}</p>
+</div></div>
+<div class="table-responsive"><table class="table table-bordered">
+<thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá hiện tại</th></tr></thead><tbody>
+{% for line in order.chitiet_list %}
+<tr><td>{{ line.sanpham.TENSPH if line.sanpham else "Sản phẩm không còn tồn tại" }}</td><td>{{ line.SOLUONG }}</td><td>{{ "{:,.0f}".format(line.sanpham.DONGIA or 0) if line.sanpham else "—" }}{% if line.sanpham %} đ{% endif %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+<h4 class="text-end">Tổng tiền: {{ "{:,.0f}".format(order.TONGGIATRI or 0) }} đ</h4>
+<a href="{{ url_for('shop.my_orders') }}" class="btn btn-outline-secondary">Quay lại đơn hàng</a>
+{% endblock %}
