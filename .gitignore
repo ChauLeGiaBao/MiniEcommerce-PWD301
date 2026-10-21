@@ -1,31 +1,47 @@
 # Python cache
 __pycache__/
 *.py[cod]
+*.pyo
 *.pyc
 
-# Environments
+# Python virtual environments
 .venv/
 venv/
 env/
+ENV/
 
-# Environment variables
+# Environment variables and secrets
 .env
 .env.*
 !.env.example
 
-# Database & local data
+# Flask local data
 instance/
 *.db
 *.sqlite
 *.sqlite3
 
-# Pytest & coverage
+# Pytest and coverage
 .pytest_cache/
 .coverage
+htmlcov/
+.tox/
 
-# IDE & OS
+# IDE files
 .vscode/
 .idea/
+*.suo
+*.user
+
+# OS files
 .DS_Store
 Thumbs.db
 
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+logs/

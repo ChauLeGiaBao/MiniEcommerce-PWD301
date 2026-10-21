@@ -7,3 +7,5 @@ api_bp = Blueprint(
 )
 
 from app.api import routes
+from app.api import order_routes
+from app.api import auth_routes

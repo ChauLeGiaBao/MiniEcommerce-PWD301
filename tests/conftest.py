@@ -52,7 +52,11 @@ from app.models import DanhMuc, SanPham, User  # noqa: E402
 @pytest.fixture()
 def app():
     flask_app = create_app()
-    flask_app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
+    flask_app.config.update(
+    TESTING=True,
+    WTF_CSRF_ENABLED=False,
+    JWT_SECRET_KEY="pwd301-unit-testing-jwt-secret-key-2026"
+)
     login_manager.user_loader(lambda uid: db.session.get(User, int(uid)) if uid and str(uid).isdigit() else None)
 
     with flask_app.app_context():

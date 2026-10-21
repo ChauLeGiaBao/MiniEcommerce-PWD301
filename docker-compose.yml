@@ -1,0 +1,44 @@
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: miniecommerce-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?MSSQL_SA_PASSWORD is required}
+      MSSQL_MEMORY_LIMIT_MB: "2048"
+
+    ports:
+      - "127.0.0.1:14333:1433"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+    restart: unless-stopped
+
+  web:
+    build: .
+    image: miniecommerce-pwd301:latest
+    container_name: miniecommerce-web
+
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?MSSQL_SA_PASSWORD is required}
+      DATABASE_URL: "mssql+pyodbc://sa:${MSSQL_SA_PASSWORD:?MSSQL_SA_PASSWORD is required}@db:1433/MiniEcommerceDB?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes"
+
+      FLASK_DEBUG: "0"
+      SESSION_COOKIE_SECURE: "0"
+
+    ports:
+      - "127.0.0.1:5050:5000"
+
+    depends_on:
+      - db
+
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
