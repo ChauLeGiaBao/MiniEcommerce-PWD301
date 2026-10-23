@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Đăng ký tài khoản - Mini Shop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4">
+    <div class="col-md-7 col-lg-6 col-xl-5">
+
+        <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
+            <div class="card-body p-2">
+
+                <!-- Header Brand & Icon -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 58px; height: 58px;">
+                        <i class="bi bi-person-plus-fill fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">Tạo Tài Khoản</h3>
+                    <p class="text-muted small mb-0">Đăng ký để trải nghiệm mua sắm và theo dõi đơn hàng</p>
+                </div>
+
+                <!-- Flash Notifications -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            {% if category == "error" %}
+                                {% set bootstrap_category = "danger" %}
+                            {% else %}
+                                {% set bootstrap_category = category %}
+                            {% endif %}
+                            <div class="alert alert-{{ bootstrap_category }} alert-dismissible fade show rounded-3 small py-2 d-flex align-items-center gap-2" role="alert">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                <span class="flex-fill">{{ message }}</span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Register Form -->
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label fw-semibold small">Họ và tên <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input id="full_name"
+                                   type="text"
+                                   name="full_name"
+                                   class="form-control border-start-0 ps-0"
+                                   value="{{ full_name or '' }}"
+                                   placeholder="Nguyễn Văn A"
+                                   required
+                                   autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Email Input -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold small">Địa chỉ Email <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input id="email"
+                                   type="email"
+                                   name="email"
+                                   class="form-control border-start-0 ps-0"
+                                   value="{{ email or '' }}"
+                                   placeholder="example@email.com"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="mb-3">
+                        <label for="phone" class="form-label fw-semibold small">Số điện thoại</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <input id="phone"
+                                   type="tel"
+                                   name="phone"
+                                   class="form-control border-start-0 ps-0"
+                                   value="{{ phone or '' }}"
+                                   placeholder="0912345678">
+                        </div>
+                        <div class="form-text small text-muted">Dùng để liên hệ khi giao hàng (không bắt buộc).</div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold small">Mật khẩu <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <input id="password"
+                                   type="password"
+                                   name="password"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Tối thiểu 6 ký tự"
+                                   minlength="6"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password Input -->
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label fw-semibold small">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-shield-check"></i>
+                            </span>
+                            <input id="confirm_password"
+                                   type="password"
+                                   name="confirm_password"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Nhập lại mật khẩu"
+                                   minlength="6"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm mb-3">
+                        <i class="bi bi-check-circle-fill me-1"></i> Đăng Ký Tài Khoản
+                    </button>
+                </form>
+
+                <!-- Already have account -->
+                <div class="text-center pt-2 border-top">
+                    <span class="text-muted small">Đã có tài khoản?</span>
+                    <a href="{{ url_for('auth.login') }}" class="fw-bold text-primary small text-decoration-none ms-1">
+                        Đăng nhập ngay
+                    </a>
+                </div>
+
+                <!-- Back to Shop -->
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('shop.products') }}" class="text-decoration-none text-secondary small">
+                        ← Quay lại cửa hàng
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

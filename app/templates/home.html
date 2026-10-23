@@ -34,6 +34,63 @@
     </div>
 </div>
 
+<!-- Featured Categories Section (Danh Mục Nổi Bật) -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-grid-fill text-primary"></i> Danh Mục Nổi Bật
+            </h4>
+            <p class="text-muted small mb-0">Khám phá nhanh các ngành hàng điện thoại, máy tính & thời trang</p>
+        </div>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill px-3">
+            Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-3">
+        {% for cat in nav_categories %}
+        <div class="col-6 col-md-3">
+            <a href="{{ url_for('shop.products', category=cat.MADANHMUC) }}" class="card category-feature-card text-decoration-none h-100 shadow-sm border-0">
+                <div class="card-body text-center p-3 d-flex flex-column align-items-center justify-content-center">
+                    {% if 'điện thoại' in cat.TENDM|lower %}
+                        <div class="category-icon-wrapper bg-primary-subtle text-primary mb-3">
+                            <i class="bi bi-phone fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ cat.TENDM }}</h6>
+                        <span class="badge bg-light text-secondary border small">iPhone, Samsung, Xiaomi</span>
+                    {% elif 'laptop' in cat.TENDM|lower or 'máy tính' in cat.TENDM|lower %}
+                        <div class="category-icon-wrapper bg-info-subtle text-info mb-3">
+                            <i class="bi bi-laptop fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ cat.TENDM }} & Máy tính</h6>
+                        <span class="badge bg-light text-secondary border small">MacBook, Dell, ThinkPad</span>
+                    {% elif 'nam' in cat.TENDM|lower %}
+                        <div class="category-icon-wrapper bg-success-subtle text-success mb-3">
+                            <i class="bi bi-person-standing fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ cat.TENDM }}</h6>
+                        <span class="badge bg-light text-secondary border small">Áo sơ mi, Jeans, Bomber</span>
+                    {% elif 'nữ' in cat.TENDM|lower %}
+                        <div class="category-icon-wrapper bg-danger-subtle text-danger mb-3">
+                            <i class="bi bi-person-standing-dress fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ cat.TENDM }}</h6>
+                        <span class="badge bg-light text-secondary border small">Đầm, Váy, Áo kiểu</span>
+                    {% else %}
+                        <div class="category-icon-wrapper bg-secondary-subtle text-secondary mb-3">
+                            <i class="bi bi-tag fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ cat.TENDM }}</h6>
+                        <span class="badge bg-light text-secondary border small">Khám phá ngay</span>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 <!-- Architecture & System Portals Section -->
 <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
     <div class="row align-items-center g-4">

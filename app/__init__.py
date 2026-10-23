@@ -42,6 +42,15 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
 
+    @app.context_processor
+    def inject_global_data():
+        from app.models import DanhMuc
+        try:
+            categories = DanhMuc.query.order_by(DanhMuc.MADANHMUC.asc()).all()
+        except Exception:
+            categories = []
+        return dict(nav_categories=categories)
+
     @app.route("/")
     def home():
         return render_template("home.html")

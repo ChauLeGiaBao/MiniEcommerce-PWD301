@@ -14,9 +14,10 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.auth import auth_bp
+from app.extensions import db
 from app.models import User
 
 
@@ -180,3 +181,102 @@ def logout():
         )
 
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/register", methods=["GET", "POST"])
+def register():
+    """
+    Đăng ký tài khoản khách hàng mới (Customer).
+    Sử dụng hash mật khẩu bảo mật và gán vai trò mặc định customer.
+    """
+    if current_user.is_authenticated:
+        return redirect_by_role(current_user)
+
+    if request.method == "POST":
+        full_name = request.form.get("full_name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        phone = request.form.get("phone", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        # Kiểm tra các trường bắt buộc
+        if not full_name or not email or not password:
+            flash("Vui lòng điền đầy đủ họ tên, email và mật khẩu.", "warning")
+            return render_template(
+                "register.html",
+                full_name=full_name,
+                email=email,
+                phone=phone,
+            ), 400
+
+        # Kiểm tra định dạng email cơ bản
+        if "@" not in email or "." not in email:
+            flash("Địa chỉ email không hợp lệ.", "warning")
+            return render_template(
+                "register.html",
+                full_name=full_name,
+                email=email,
+                phone=phone,
+            ), 400
+
+        # Kiểm tra độ dài mật khẩu
+        if len(password) < 6:
+            flash("Mật khẩu phải có ít nhất 6 ký tự.", "warning")
+            return render_template(
+                "register.html",
+                full_name=full_name,
+                email=email,
+                phone=phone,
+            ), 400
+
+        # Kiểm tra xác nhận mật khẩu
+        if password != confirm_password:
+            flash("Mật khẩu xác nhận không khớp.", "warning")
+            return render_template(
+                "register.html",
+                full_name=full_name,
+                email=email,
+                phone=phone,
+            ), 400
+
+        # Kiểm tra email trùng lặp
+        existing_user = User.query.filter_by(EMAIL=email).first()
+        if existing_user:
+            flash("Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.", "danger")
+            return render_template(
+                "register.html",
+                full_name=full_name,
+                email=email,
+                phone=phone,
+            ), 400
+
+        # Tạo tài khoản mới
+        new_user = User(
+            HOTEN=full_name,
+            EMAIL=email,
+            SDT=phone if phone else None,
+            PASSWORD_HASH=generate_password_hash(password),
+            ROLE="customer",
+            TRANGTHAIND=1,
+        )
+
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            flash("Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại sau.", "danger")
+            return render_template(
+                "register.html",
+                full_name=full_name,
+                email=email,
+                phone=phone,
+            ), 500
+
+        # Tự động đăng nhập
+        login_user(new_user)
+        session.pop("last_order_id", None)
+        flash(f"Đăng ký tài khoản thành công! Xin chào {new_user.HOTEN}.", "success")
+        return redirect(url_for("shop.products"))
+
+    return render_template("register.html", full_name="", email="", phone="")

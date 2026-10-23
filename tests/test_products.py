@@ -292,3 +292,15 @@ def test_service_parse_price():
     assert product_service.parse_price("12.5") == Decimal("12.5")
     for bad in (None, "", "  ", "abc", "-5", "1e5", "12.345", "9" * 30):
         assert product_service.parse_price(bad) is None, bad
+
+
+def test_category_navigation_in_header_and_home(client):
+    home_html = client.get("/").get_data(as_text=True)
+    assert "Danh Mục Nổi Bật" in home_html
+    assert "/products?category=11" in home_html
+    assert "/products?category=12" in home_html
+
+    products_html = client.get("/products").get_data(as_text=True)
+    assert "category-topbar" in products_html
+    assert "/products?category=11" in products_html
+    assert "/products?category=12" in products_html
