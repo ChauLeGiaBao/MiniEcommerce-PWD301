@@ -301,6 +301,6 @@ def test_category_navigation_in_header_and_home(client):
     assert "/products?category=12" in home_html
 
     products_html = client.get("/products").get_data(as_text=True)
-    assert "category-topbar" in products_html
+    assert "Danh mục" in products_html
     assert "/products?category=11" in products_html
     assert "/products?category=12" in products_html

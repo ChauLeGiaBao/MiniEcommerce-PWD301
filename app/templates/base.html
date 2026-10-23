@@ -160,49 +160,8 @@
         </div>
     </nav>
 
-    {% if not request.path.startswith('/admin') and request.endpoint != 'shop.product_detail' %}
-    <!-- Category Sub-Navigation Bar at Top of Website (Đầu web) -->
-    <div class="category-topbar bg-white border-bottom shadow-sm mb-4">
-        <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2 py-2">
-            <div class="d-flex align-items-center gap-2 overflow-x-auto text-nowrap py-1">
-                <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1">
-                    <i class="bi bi-grid-3x3-gap-fill me-1"></i> Danh mục:
-                </span>
-                <a href="{{ url_for('shop.products') }}" 
-                   class="cat-chip {{ 'active' if not request.args.get('category') and request.endpoint == 'shop.products' else '' }}">
-                    <i class="bi bi-grid me-1"></i> Tất cả
-                </a>
-                {% for cat in nav_categories %}
-                    {% set is_active = (request.args.get('category')|string == cat.MADANHMUC|string and request.endpoint == 'shop.products') %}
-                    <a href="{{ url_for('shop.products', category=cat.MADANHMUC) }}" 
-                       class="cat-chip {{ 'active' if is_active else '' }}">
-                        {% if 'điện thoại' in cat.TENDM|lower %}
-                            <i class="bi bi-phone text-primary me-1"></i>
-                        {% elif 'laptop' in cat.TENDM|lower or 'máy tính' in cat.TENDM|lower %}
-                            <i class="bi bi-laptop text-info me-1"></i>
-                        {% elif 'nam' in cat.TENDM|lower %}
-                            <i class="bi bi-person text-success me-1"></i>
-                        {% elif 'nữ' in cat.TENDM|lower %}
-                            <i class="bi bi-gender-female text-danger me-1"></i>
-                        {% else %}
-                            <i class="bi bi-tag text-secondary me-1"></i>
-                        {% endif %}
-                        {{ cat.TENDM }}
-                    </a>
-                {% endfor %}
-            </div>
-
-            <div class="d-none d-lg-flex align-items-center gap-3 small text-muted">
-                <span><i class="bi bi-phone-vibrate text-primary me-1"></i> Điện thoại mới</span>
-                <span><i class="bi bi-laptop text-info me-1"></i> Laptop & Máy tính</span>
-                <span><i class="bi bi-truck text-success me-1"></i> Giao hàng toàn quốc</span>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Main Content Container -->
-    <main class="container">
+    <main class="container my-4">
         <!-- AJAX Cart Messages Notification Banner -->
         <div data-cart-messages aria-live="polite"></div>
 
