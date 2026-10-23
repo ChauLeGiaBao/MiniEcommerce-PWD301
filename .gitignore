@@ -33,9 +33,10 @@ htmlcov/
 *.suo
 *.user
 
-# OS files
+# OS and temporary files
 .DS_Store
 Thumbs.db
+~$*
 
 # Build artifacts
 build/
