@@ -39,6 +39,10 @@
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+                    {% if next_url %}
+                    <input type="hidden" name="next" value="{{ next_url }}">
+                    {% endif %}
+
                     <!-- Full Name -->
                     <div class="mb-3">
                         <label for="full_name" class="form-label fw-semibold small">Họ và tên <span class="text-danger">*</span></label>
@@ -134,7 +138,7 @@
                 <!-- Already have account -->
                 <div class="text-center pt-2 border-top">
                     <span class="text-muted small">Đã có tài khoản?</span>
-                    <a href="{{ url_for('auth.login') }}" class="fw-bold text-primary small text-decoration-none ms-1">
+                    <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}" class="fw-bold text-primary small text-decoration-none ms-1">
                         Đăng nhập ngay
                     </a>
                 </div>

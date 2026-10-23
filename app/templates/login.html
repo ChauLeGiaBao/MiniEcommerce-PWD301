@@ -95,7 +95,7 @@
                 <!-- Don't have an account -->
                 <div class="text-center pt-2 mb-3 border-top">
                     <span class="text-muted small">Chưa có tài khoản?</span>
-                    <a href="{{ url_for('auth.register') }}" class="fw-bold text-primary small text-decoration-none ms-1">
+                    <a href="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}" class="fw-bold text-primary small text-decoration-none ms-1">
                         Đăng ký ngay
                     </a>
                 </div>

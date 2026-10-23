@@ -124,3 +124,15 @@ def test_register_redirect_when_logged_in(client):
     response = client.get("/auth/register")
     assert response.status_code == 302
     assert "/products" in response.headers["Location"]
+
+
+def test_register_with_next_url(client):
+    response = client.post("/auth/register?next=/checkout", data={
+        "full_name": "Next User",
+        "email": "nextuser@example.com",
+        "phone": "0911223344",
+        "password": "Password@123",
+        "confirm_password": "Password@123",
+    })
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/checkout"

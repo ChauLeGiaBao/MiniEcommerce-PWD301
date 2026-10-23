@@ -216,6 +216,10 @@ def _render_checkout(cart_items, total_price, form=None):
 
 @shop_bp.route("/checkout", methods=["GET", "POST"])
 def checkout():
+    if not current_user.is_authenticated:
+        flash("Vui lòng đăng nhập hoặc đăng ký tài khoản để tiến hành thanh toán.", "warning")
+        return redirect(url_for("auth.login", next=url_for("shop.checkout")))
+
     cart_items, total_price, invalid_keys = _get_cart_items()
     if invalid_keys:
         flash("Một số sản phẩm không còn tồn tại hoặc có số lượng không hợp lệ. Vui lòng kiểm tra lại.", "warning")
@@ -226,6 +230,10 @@ def checkout():
 
     form = CheckoutForm()
     if request.method == "GET":
+        if not form.fullname.data and current_user.HOTEN:
+            form.fullname.data = current_user.HOTEN
+        if not form.phone.data and current_user.SDT:
+            form.phone.data = current_user.SDT
         return _render_checkout(cart_items, total_price, form)
 
     if not form.validate_on_submit():
@@ -255,7 +263,7 @@ def checkout():
             order_total += product.DONGIA * quantity
             lines.append((product, quantity))
 
-        user_id = current_user.MANGUOIDUNG if current_user.is_authenticated else None
+        user_id = current_user.MANGUOIDUNG
         order = DonHang(
             MANGUOIDUNG=user_id, NGAYDAT=date.today(), TONGGIATRI=order_total, TRANGTHAI=0,
             HOTENNHAN=fullname, DIACHIGIAO=address, SDTNHAN=phone,

@@ -16,10 +16,15 @@ def client():
         db.drop_all()
         db.create_all()
         product = SanPham(TENSPH="Test product", DONGIA=10000, SOLUONGTON=5, TRANGTHAISPH=1)
-        db.session.add(product)
+        user = User(HOTEN="Test Customer", EMAIL="customer@example.com", ROLE="customer", TRANGTHAIND=1)
+        db.session.add_all([product, user])
         db.session.commit()
         product_id = product.MASANPHAM
+        user_id = user.MANGUOIDUNG
     with app.test_client() as test_client:
+        with test_client.session_transaction() as sess:
+            sess["_user_id"] = str(user_id)
+            sess["_fresh"] = True
         yield test_client, product_id
     with app.app_context():
         db.session.remove()
@@ -80,7 +85,7 @@ def test_checkout_success_creates_order_detail_and_decrements_stock(client):
         order = db.session.query(DonHang).one()
         detail = db.session.query(ChiTietDonHang).one()
         product = db.session.get(SanPham, product_id)
-        assert order.MANGUOIDUNG is None
+        assert order.MANGUOIDUNG is not None
         assert float(order.TONGGIATRI) == 20000
         assert detail.SOLUONG == 2
         assert product.SOLUONGTON == 3
@@ -148,6 +153,7 @@ def test_customer_order_is_not_accessible_through_guest_last_order_session(clien
         db.session.commit()
         order_id = order.MADONHANG
     with c.session_transaction() as sess:
+        sess.pop("_user_id", None)
         sess["last_order_id"] = order_id
     response = c.get(f"/order-success/{order_id}")
     assert response.status_code == 403
@@ -259,6 +265,8 @@ def test_order_success_get_f5_is_idempotent(client):
 
 def test_my_orders_requires_login(client):
     c, _ = client
+    with c.session_transaction() as sess:
+        sess.pop("_user_id", None)
     response = c.get("/my-orders")
     assert response.status_code == 302
     assert "/auth/login" in response.headers.get("Location", "")
@@ -309,3 +317,44 @@ def test_cart_page_renders_with_items_without_error(client):
     response = c.get("/cart")
     assert response.status_code == 200
     assert "Giỏ hàng của bạn" in response.get_data(as_text=True)
+
+
+def test_checkout_requires_login(client):
+    c, product_id = client
+    # Log out to test unauthenticated guest behavior
+    with c.session_transaction() as sess:
+        sess.pop("_user_id", None)
+    c.post(f"/cart/add/{product_id}", headers={"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"})
+
+    # GET /checkout redirects to login with next
+    get_res = c.get("/checkout")
+    assert get_res.status_code == 302
+    assert "/auth/login" in get_res.headers.get("Location", "")
+    assert "next=" in get_res.headers.get("Location", "") and "checkout" in get_res.headers.get("Location", "")
+
+    # POST /checkout redirects to login with next and does not create order
+    post_res = c.post("/checkout", data={"fullname": "Guest", "address": "Address", "phone": "0912345678"})
+    assert post_res.status_code == 302
+    assert "/auth/login" in post_res.headers.get("Location", "")
+    assert "next=" in post_res.headers.get("Location", "") and "checkout" in post_res.headers.get("Location", "")
+    with c.application.app_context():
+        assert db.session.query(DonHang).count() == 0
+
+
+def test_guest_can_browse_and_add_to_cart_without_login(client):
+    c, product_id = client
+    # Unauthenticated guest
+    with c.session_transaction() as sess:
+        sess.pop("_user_id", None)
+
+    # Browse products works normally
+    assert c.get("/products").status_code == 200
+    # View product detail works normally
+    assert c.get(f"/products/{product_id}").status_code == 200
+    # View cart works normally
+    assert c.get("/cart").status_code == 200
+    # Add to cart works normally
+    add_res = c.post(f"/cart/add/{product_id}", headers={"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"})
+    assert add_res.status_code == 200
+    with c.session_transaction() as sess:
+        assert sess["cart"][str(product_id)] == 1

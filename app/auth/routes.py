@@ -188,11 +188,15 @@ def register():
     """
     Đăng ký tài khoản khách hàng mới (Customer).
     Sử dụng hash mật khẩu bảo mật và gán vai trò mặc định customer.
+    Hỗ trợ chuyển hướng đến next_url an toàn (ví dụ: quay lại /checkout).
     """
     if current_user.is_authenticated:
         return redirect_by_role(current_user)
 
+    next_url = request.args.get("next")
+
     if request.method == "POST":
+        next_url = request.form.get("next") or request.args.get("next")
         full_name = request.form.get("full_name", "").strip()
         email = request.form.get("email", "").strip().lower()
         phone = request.form.get("phone", "").strip()
@@ -207,6 +211,7 @@ def register():
                 full_name=full_name,
                 email=email,
                 phone=phone,
+                next_url=next_url,
             ), 400
 
         # Kiểm tra định dạng email cơ bản
@@ -217,6 +222,7 @@ def register():
                 full_name=full_name,
                 email=email,
                 phone=phone,
+                next_url=next_url,
             ), 400
 
         # Kiểm tra độ dài mật khẩu
@@ -227,6 +233,7 @@ def register():
                 full_name=full_name,
                 email=email,
                 phone=phone,
+                next_url=next_url,
             ), 400
 
         # Kiểm tra xác nhận mật khẩu
@@ -237,6 +244,7 @@ def register():
                 full_name=full_name,
                 email=email,
                 phone=phone,
+                next_url=next_url,
             ), 400
 
         # Kiểm tra email trùng lặp
@@ -248,6 +256,7 @@ def register():
                 full_name=full_name,
                 email=email,
                 phone=phone,
+                next_url=next_url,
             ), 400
 
         # Tạo tài khoản mới
@@ -271,12 +280,18 @@ def register():
                 full_name=full_name,
                 email=email,
                 phone=phone,
+                next_url=next_url,
             ), 500
 
         # Tự động đăng nhập
         login_user(new_user)
         session.pop("last_order_id", None)
         flash(f"Đăng ký tài khoản thành công! Xin chào {new_user.HOTEN}.", "success")
+
+        # Redirect về trang trước nếu URL an toàn (ví dụ: checkout)
+        if next_url and is_safe_url(next_url):
+            return redirect(next_url)
+
         return redirect(url_for("shop.products"))
 
-    return render_template("register.html", full_name="", email="", phone="")
+    return render_template("register.html", full_name="", email="", phone="", next_url=next_url)
