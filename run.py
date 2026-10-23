@@ -9,7 +9,7 @@ app = create_app()
 
 if __name__ == "__main__":
     debug_mode = os.getenv(
-        "FLASK_DEBUG", "0"
+        "FLASK_DEBUG", "1"
     ).lower() in ("1", "true", "yes")
 
     app.run(
