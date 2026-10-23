@@ -45,3 +45,6 @@ dist/
 # Logs
 *.log
 logs/
+
+# Agent local directory
+.agents/
