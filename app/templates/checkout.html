@@ -1,55 +1,114 @@
 {% extends "base.html" %}
-{% block title %}Thanh toán{% endblock %}
+{% block title %}Thanh toán đơn hàng - Mini Shop{% endblock %}
 
 {% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold mb-1">Thanh toán đơn hàng</h2>
+    <p class="text-muted small mb-0">Vui lòng cung cấp thông tin người nhận để hoàn tất đơn hàng</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} rounded-3 shadow-sm d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
 <div class="row g-4">
-    <div class="col-md-7">
-        <h2 class="mb-4">Thông tin nhận hàng</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <form method="POST" novalidate>
-            {{ form.hidden_tag() }}
-            <div class="mb-3">
-                {{ form.fullname.label(class="form-label") }}
-                {{ form.fullname(class="form-control", autocomplete="name") }}
-                {% for error in form.fullname.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-            </div>
-            <div class="mb-3">
-                {{ form.address.label(class="form-label") }}
-                {{ form.address(class="form-control", rows="3", autocomplete="street-address") }}
-                {% for error in form.address.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-            </div>
-            <div class="mb-3">
-                {{ form.phone.label(class="form-label") }}
-                {{ form.phone(class="form-control", autocomplete="tel") }}
-                {% for error in form.phone.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-secondary">Quay lại giỏ hàng</a>
-                {{ form.submit(class="btn btn-success") }}
-            </div>
-        </form>
+    <!-- Shipping Form -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <h4 class="fw-bold mb-3 d-flex align-items-center gap-2 text-dark">
+                <i class="bi bi-geo-alt-fill text-primary"></i>
+                <span>Thông tin nhận hàng</span>
+            </h4>
+
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.fullname.label(class="form-label fw-semibold small") }}
+                    {{ form.fullname(class="form-control form-control-lg fs-6", placeholder="Ví dụ: Nguyễn Văn A", autocomplete="name") }}
+                    {% for error in form.fullname.errors %}
+                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.phone.label(class="form-label fw-semibold small") }}
+                    {{ form.phone(class="form-control form-control-lg fs-6", placeholder="Ví dụ: 0912345678 hoặc +84912345678", autocomplete="tel") }}
+                    {% for error in form.phone.errors %}
+                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.address.label(class="form-label fw-semibold small") }}
+                    {{ form.address(class="form-control fs-6", rows="3", placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố...", autocomplete="street-address") }}
+                    {% for error in form.address.errors %}
+                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="p-3 bg-light rounded-3 border mb-4 small text-muted">
+                    <div class="d-flex align-items-center gap-2 fw-semibold text-dark mb-1">
+                        <i class="bi bi-cash-stack text-success fs-5"></i>
+                        <span>Phương thức thanh toán: COD (Giao hàng thu tiền)</span>
+                    </div>
+                    <span>Quý khách sẽ thanh toán tiền mặt trực tiếp cho nhân viên giao hàng khi nhận được bưu kiện.</span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                    <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại giỏ hàng
+                    </a>
+                    {{ form.submit(class="btn btn-success btn-lg px-4 py-2 fw-bold shadow-sm") }}
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="col-md-5">
-        <h4 class="mb-3">Đơn hàng</h4>
-        <div class="card"><div class="card-body">
-            {% for item in cart_items %}
-            <div class="d-flex justify-content-between mb-2">
-                <span>{{ item.product.TENSPH }} × {{ item.quantity }}</span>
-                <span>{{ "{:,.0f}".format(item.subtotal) }} đ</span>
+
+    <!-- Order Items Breakdown -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 85px;">
+            <h5 class="fw-bold mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-receipt text-primary"></i>
+                <span>Tóm tắt đơn hàng</span>
+            </h5>
+
+            <div class="order-items-list mb-3" style="max-height: 280px; overflow-y: auto;">
+                {% for item in cart_items %}
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <strong class="d-block text-dark small">{{ item.product.TENSPH }}</strong>
+                        <span class="text-muted small">Số lượng: {{ item.quantity }}</span>
+                    </div>
+                    <span class="font-monospace text-dark fw-semibold small">{{ "{:,.0f}".format(item.subtotal) }} đ</span>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-            <hr>
-            <div class="d-flex justify-content-between fw-bold">
-                <span>Tổng cộng</span>
-                <span class="text-danger">{{ "{:,.0f}".format(total_price) }} đ</span>
+
+            <div class="d-flex justify-content-between text-muted small mb-2">
+                <span>Tạm tính:</span>
+                <span class="font-monospace">{{ "{:,.0f}".format(total_price) }} đ</span>
             </div>
-        </div></div>
+
+            <div class="d-flex justify-content-between text-muted small mb-3">
+                <span>Phí vận chuyển COD:</span>
+                <span class="text-success fw-semibold">Miễn phí</span>
+            </div>
+
+            <hr class="my-2 text-secondary opacity-25">
+
+            <div class="d-flex justify-content-between align-items-center pt-2">
+                <span class="fw-bold text-dark fs-5">Tổng cộng:</span>
+                <span class="fs-4 fw-bold text-danger font-monospace">{{ "{:,.0f}".format(total_price) }} đ</span>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

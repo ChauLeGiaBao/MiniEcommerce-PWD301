@@ -1,99 +1,176 @@
 {% extends "base.html" %}
-{% block title %}Giỏ hàng{% endblock %}
+{% block title %}Giỏ hàng - Mini Shop{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Giỏ hàng của bạn</h2>
-    <a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary">
-        Tiếp tục mua sắm
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Giỏ hàng của bạn</h2>
+        <p class="text-muted small mb-0">Xem lại và điều chỉnh số lượng các sản phẩm đã chọn</p>
+    </div>
+    <a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary btn-sm nav-btn">
+        <i class="bi bi-arrow-left me-1"></i> Tiếp tục mua sắm
     </a>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
+        <div class="alert alert-{{ category }} rounded-3 shadow-sm d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>{{ message }}</span>
+        </div>
         {% endfor %}
     {% endif %}
 {% endwith %}
 
 {% if cart_items %}
 <div id="cart-content">
-<div class="table-responsive">
-    <table class="table table-bordered align-middle">
-        <thead>
-            <tr>
-                <th>Sản phẩm</th>
-                <th class="text-end">Giá</th>
-                <th style="width: 190px;">Số lượng</th>
-                <th class="text-end">Thành tiền</th>
-                <th style="width: 90px;">Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in cart_items %}
-            <tr data-cart-row data-price="{{ item.product.DONGIA }}">
-                <td>
-                    {{ item.product.TENSPH }}
-                </td>
-                <td class="text-end">
-                    {{ "{:,.0f}".format(item.product.DONGIA) }} đ
-                </td>
-                <td>
-                    <form action="{{ url_for('shop.update_cart', product_id=item.product.MASANPHAM) }}"
-                          method="POST"
-                          class="d-flex gap-2">
-                        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-                        <input type="number"
-                               name="quantity"
-                               value="{{ item.quantity }}"
-                               data-saved-quantity="{{ item.quantity }}"
-                               min="1"
-                               max="{{ item.product.SOLUONGTON }}"
-                               class="form-control form-control-sm">
-                        <button type="submit" class="btn btn-sm btn-secondary">
-                            Cập nhật
-                        </button>
-                    </form>
-                </td>
-                <td class="text-end fw-bold">
-                    <span data-line-subtotal>{{ "{:,.0f}".format(item.subtotal) }} đ</span>
-                </td>
-                <td>
-                    <form action="{{ url_for('shop.remove_from_cart', product_id=item.product.MASANPHAM) }}"
-                          method="POST">
-                        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            Xóa
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="row g-4">
+        <!-- Cart Items Table Card -->
+        <div class="col-lg-8">
+            <div class="cart-table-card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="min-width: 220px;">Sản phẩm</th>
+                                <th scope="col" class="text-end" style="min-width: 110px;">Đơn giá</th>
+                                <th scope="col" style="min-width: 180px;">Số lượng</th>
+                                <th scope="col" class="text-end" style="min-width: 120px;">Thành tiền</th>
+                                <th scope="col" class="text-center" style="width: 80px;">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            <tr data-cart-row data-price="{{ item.product.DONGIA }}">
+                                <td>
+                                    <div class="fw-bold text-dark">
+                                        <a href="{{ url_for('shop.product_detail', id=item.product.MASANPHAM) }}" class="text-decoration-none text-dark hover-primary">
+                                            {{ item.product.TENSPH }}
+                                        </a>
+                                    </div>
+                                    {% if item.product.danhmuc %}
+                                    <span class="badge bg-light text-secondary border small mt-1">
+                                        {{ item.product.danhmuc.TENDM }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end text-muted font-monospace">
+                                    {{ "{:,.0f}".format(item.product.DONGIA) }} đ
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('shop.update_cart', product_id=item.product.MASANPHAM) }}"
+                                          method="POST"
+                                          class="d-flex align-items-center gap-2">
+                                        {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {% endif %}
+                                        <input type="number"
+                                               name="quantity"
+                                               value="{{ item.quantity }}"
+                                               data-saved-quantity="{{ item.quantity }}"
+                                               min="1"
+                                               max="{{ item.product.SOLUONGTON }}"
+                                               class="form-control form-control-sm text-center font-monospace"
+                                               style="max-width: 80px;">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Lưu số lượng">
+                                            Cập nhật
+                                        </button>
+                                    </form>
+                                    <div class="text-muted small mt-1" style="font-size: 0.75rem;">
+                                        Kho: {{ item.product.SOLUONGTON }}
+                                    </div>
+                                </td>
+                                <td class="text-end fw-bold text-primary font-monospace">
+                                    <span data-line-subtotal>{{ "{:,.0f}".format(item.subtotal) }} đ</span>
+                                </td>
+                                <td class="text-center">
+                                    <form action="{{ url_for('shop.remove_from_cart', product_id=item.product.MASANPHAM) }}"
+                                          method="POST">
+                                        {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {% endif %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle p-1" style="width: 32px; height: 32px;" title="Xóa khỏi giỏ hàng">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="col-lg-4">
+            <div class="cart-summary-card shadow-sm sticky-top" style="top: 85px;">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom">Tóm Tắt Đơn Hàng</h5>
+
+                <div class="summary-row text-muted">
+                    <span>Tạm tính hàng hóa:</span>
+                    <span class="font-monospace text-dark fw-semibold">
+                        <span data-cart-total>{{ "{:,.0f}".format(total_price) }} đ</span>
+                    </span>
+                </div>
+
+                <div class="summary-row text-muted">
+                    <span>Phí vận chuyển COD:</span>
+                    <span class="badge bg-success-subtle text-success">Miễn phí (0 đ)</span>
+                </div>
+
+                <hr class="my-3 text-secondary opacity-25">
+
+                <div class="summary-row mb-4">
+                    <span class="fw-bold text-dark fs-5">Tổng thanh toán:</span>
+                    <div class="summary-total font-monospace">
+                        <span data-cart-total>{{ "{:,.0f}".format(total_price) }} đ</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('shop.checkout') }}" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3">
+                    <i class="bi bi-shield-check fs-5"></i>
+                    <span>Tiến Hành Thanh Toán</span>
+                </a>
+
+                <div class="bg-light p-3 rounded-3 border small text-muted">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-truck text-primary"></i>
+                        <span>Giao hàng COD tận nơi toàn quốc</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-lock text-success"></i>
+                        <span>Bảo mật giao dịch an toàn 100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center">
-    <h4>
-        Tổng cộng:
-        <span class="text-danger">
-            <span data-cart-total>{{ "{:,.0f}".format(total_price) }} đ</span>
-        </span>
-    </h4>
+<div id="cart-empty" class="card border-0 shadow-sm rounded-4 p-5 text-center my-4 d-none">
+    <div class="text-muted mb-3 display-4"><i class="bi bi-cart-x"></i></div>
+    <h4 class="fw-bold mb-2">Giỏ hàng của bạn đang trống</h4>
+    <p class="text-muted mb-4">Bạn chưa chọn sản phẩm nào vào giỏ hàng.</p>
+    <div>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-bag-plus me-1"></i> Bắt đầu mua sắm ngay
+        </a>
+    </div>
+</div>
 
-    <a href="{{ url_for('shop.checkout') }}" class="btn btn-success btn-lg">
-        Tiến hành thanh toán
-    </a>
-</div>
-</div>
-<div id="cart-empty" class="alert alert-info d-none">Giỏ hàng của bạn đang trống.</div>
 {% else %}
-<div class="alert alert-info">
-    Giỏ hàng của bạn đang trống.
+<div class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+    <div class="text-muted mb-3 display-4"><i class="bi bi-cart-x text-secondary opacity-50"></i></div>
+    <h4 class="fw-bold mb-2">Giỏ hàng của bạn đang trống.</h4>
+    <p class="text-muted mb-4">Bạn chưa chọn món hàng nào vào giỏ. Hãy dạo một vòng cửa hàng nhé!</p>
+    <div>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-bag-plus me-1"></i> Mua sắm ngay
+        </a>
+    </div>
 </div>
-<a href="{{ url_for('shop.products') }}" class="btn btn-primary">
-    Mua sắm ngay
-</a>
 {% endif %}
+
 {% endblock %}

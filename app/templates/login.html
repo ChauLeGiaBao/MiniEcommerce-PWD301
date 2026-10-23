@@ -1,131 +1,102 @@
-
 {% extends "base.html" %}
-
 {% block title %}Đăng nhập - Mini Shop{% endblock %}
 
 {% block content %}
-
-<div class="row justify-content-center">
+<div class="row justify-content-center my-4">
     <div class="col-md-6 col-lg-5 col-xl-4">
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
+        <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
+            <div class="card-body p-2">
 
-                <h3 class="text-center mb-1">
-                    Đăng nhập
-                </h3>
+                <!-- Header Brand & Icon -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 58px; height: 58px;">
+                        <i class="bi bi-shield-lock-fill fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">Đăng Nhập</h3>
+                    <p class="text-muted small mb-0">Hệ thống Mini E-Commerce Store</p>
+                </div>
 
-                <p class="text-muted text-center mb-4">
-                    Mini E-Commerce Store
-                </p>
-
+                <!-- Flash Notifications -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
-
                         {% for category, message in messages %}
-
                             {% if category == "error" %}
                                 {% set bootstrap_category = "danger" %}
                             {% else %}
                                 {% set bootstrap_category = category %}
                             {% endif %}
-
-                            <div
-                                class="alert alert-{{ bootstrap_category }} alert-dismissible fade show"
-                                role="alert"
-                            >
-                                {{ message }}
-
-                                <button
-                                    type="button"
-                                    class="btn-close"
-                                    data-bs-dismiss="alert"
-                                    aria-label="Close"
-                                ></button>
+                            <div class="alert alert-{{ bootstrap_category }} alert-dismissible fade show rounded-3 small py-2 d-flex align-items-center gap-2" role="alert">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                <span class="flex-fill">{{ message }}</span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-
                         {% endfor %}
-
                     {% endif %}
                 {% endwith %}
 
                 <!-- Login Form -->
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                    <!-- CSRF Protection -->
-                    <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="{{ csrf_token() }}"
-                    >
-
-                    <!-- Redirect to requested page after login -->
                     {% if next_url %}
-                    <input
-                        type="hidden"
-                        name="next"
-                        value="{{ next_url }}"
-                    >
+                    <input type="hidden" name="next" value="{{ next_url }}">
                     {% endif %}
 
-                    <!-- Email -->
+                    <!-- Email Input -->
                     <div class="mb-3">
-
-                        <label for="email" class="form-label">
-                            Email
-                        </label>
-
-                        <input
-                            id="email"
-                            type="email"
-                            name="email"
-                            class="form-control"
-                            value="{{ email or '' }}"
-                            placeholder="admin@minishop.local"
-                            required
-                            autofocus
-                        >
-
+                        <label for="email" class="form-label fw-semibold small">Địa chỉ Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input id="email"
+                                   type="email"
+                                   name="email"
+                                   class="form-control border-start-0 ps-0"
+                                   value="{{ email or '' }}"
+                                   placeholder="admin@minishop.local"
+                                   required
+                                   autofocus>
+                        </div>
                     </div>
 
-                    <!-- Password -->
-                    <div class="mb-3">
-
-                        <label for="password" class="form-label">
-                            Mật khẩu
-                        </label>
-
-                        <input
-                            id="password"
-                            type="password"
-                            name="password"
-                            class="form-control"
-                            placeholder="Nhập mật khẩu"
-                            required
-                        >
-
+                    <!-- Password Input -->
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold small">Mật khẩu</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <input id="password"
+                                   type="password"
+                                   name="password"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Nhập mật khẩu của bạn"
+                                   required>
+                        </div>
                     </div>
 
-                    <!-- Submit -->
-                    <button
-                        type="submit"
-                        class="btn btn-primary w-100"
-                    >
-                        Đăng nhập
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm mb-3">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
                     </button>
-
                 </form>
 
-                <!-- Back to shop -->
-                <div class="text-center mt-3">
+                <!-- Demo Credentials Helper Note -->
+                <div class="bg-light p-3 rounded-3 border small mb-3">
+                    <span class="fw-bold d-block text-secondary mb-1">Tài khoản thử nghiệm demo:</span>
+                    <div class="text-muted" style="font-size: 0.8rem;">
+                        <div>• Admin: <code>admin@minishop.local</code> / <code>Admin@123</code></div>
+                        <div>• Customer: <code>customer@minishop.local</code> / <code>Customer@123</code></div>
+                    </div>
+                </div>
 
-                    <a
-                        href="{{ url_for('shop.products') }}"
-                        class="text-decoration-none"
-                    >
+                <!-- Back to Shop -->
+                <div class="text-center">
+                    <a href="{{ url_for('shop.products') }}" class="text-decoration-none text-secondary small">
                         ← Quay lại cửa hàng
                     </a>
-
                 </div>
 
             </div>
@@ -133,5 +104,4 @@
 
     </div>
 </div>
-
 {% endblock %}

@@ -1,169 +1,225 @@
-
 {% extends "base.html" %}
 {% from "_macros.html" import product_image %}
 
 {% block title %}
-{{ product.TENSPH if product else 'Không tìm thấy sản phẩm' }}
+{{ product.TENSPH if product else 'Không tìm thấy sản phẩm' }} - Mini Shop
 {% endblock %}
 
 {% block content %}
 
 {# Nút quay lại: giữ đúng trang, danh mục, bộ lọc và sắp xếp trước đó #}
-<a href="{{ url_for('shop.products', **back_args) }}"
-   class="btn btn-outline-secondary btn-sm mb-3">
-    ← Quay lại
-</a>
+<div class="mb-3">
+    <a href="{{ url_for('shop.products', **back_args) }}" class="btn btn-outline-secondary btn-sm nav-btn">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+    </a>
+</div>
 
 {% if not product %}
-
-<div class="alert alert-warning">
-    <h4 class="alert-heading">Không tìm thấy sản phẩm</h4>
-
-    <p class="mb-0">
+<!-- Required by test_products.py: "Không tìm thấy sản phẩm" -->
+<div class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+    <div class="text-warning mb-3 display-4"><i class="bi bi-exclamation-circle"></i></div>
+    <h3 class="fw-bold mb-2">Không tìm thấy sản phẩm</h3>
+    <p class="text-muted mb-4">
         Sản phẩm này không tồn tại hoặc đã ngừng kinh doanh.
-
-        <a href="{{ url_for('shop.products') }}">
-            Xem các sản phẩm khác
-        </a>
     </p>
+    <div>
+        <a href="{{ url_for('shop.products') }}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-grid me-1"></i> Xem các sản phẩm khác
+        </a>
+    </div>
 </div>
 
 {% else %}
 
-<div class="card">
-    <div class="card-body">
-        <div class="row g-4">
+<!-- Product Overview Card -->
+<div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+    <div class="row g-5 align-items-center">
 
-            <div class="col-md-5">
+        <!-- Product Image Preview -->
+        <div class="col-md-5 text-center">
+            <div class="p-3 bg-light rounded-4 border overflow-hidden shadow-sm" style="max-height: 400px; display: flex; align-items: center; justify-content: center;">
                 {{ product_image(
                     product,
-                    "img-fluid rounded border w-100",
-                    "320px"
+                    "img-fluid rounded-3 w-100",
+                    "340px"
                 ) }}
             </div>
+        </div>
 
-            <div class="col-md-7">
+        <!-- Product Information & Action -->
+        <div class="col-md-7">
 
-                <h2>{{ product.TENSPH }}</h2>
+            {% if product.danhmuc %}
+            <span class="category-badge-chip mb-2">
+                <i class="bi bi-tag-fill me-1"></i> {{ product.danhmuc.TENDM }}
+            </span>
+            {% endif %}
 
-                {% if product.danhmuc %}
-                <p class="text-muted">
-                    Danh mục: {{ product.danhmuc.TENDM }}
-                </p>
-                {% endif %}
+            <h2 class="fw-bold text-dark mb-2">{{ product.TENSPH }}</h2>
 
-                <p>{{ product.MOTA or '' }}</p>
+            <!-- Rating overview -->
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="text-warning fs-5">
+                    {% if avg_rating %}
+                        {% set full_stars = avg_rating|int %}
+                        {% for _ in range(full_stars) %}★{% endfor %}
+                        {% if avg_rating - full_stars >= 0.5 %}½{% endif %}
+                    {% else %}
+                        ☆☆☆☆☆
+                    {% endif %}
+                </div>
+                <span class="fw-bold text-dark">{{ avg_rating or 0 }}</span>
+                <span class="text-muted small">({{ review_count }} đánh giá)</span>
+            </div>
 
-                <p class="fs-4 fw-bold text-danger">
-                    {{ "{:,.0f}".format(product.DONGIA or 0) }} đ
-                </p>
+            <!-- Price -->
+            <div class="fs-2 fw-bold text-danger mb-3">
+                {{ "{:,.0f}".format(product.DONGIA or 0) }} đ
+            </div>
 
+            <!-- Description -->
+            <p class="text-secondary mb-4 leading-relaxed">
+                {{ product.MOTA or 'Sản phẩm chính hãng với tiêu chuẩn chất lượng cao, bảo hành uy tín tại Mini Shop.' }}
+            </p>
+
+            <!-- Stock and Add to Cart Section -->
+            <div class="p-3 bg-light rounded-3 border mb-4">
                 {% if product.SOLUONGTON and product.SOLUONGTON > 0 %}
+                <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-3">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Còn hàng: {{ product.SOLUONGTON }} sản phẩm có sẵn</span>
+                </div>
 
-                <p class="text-success">
-                    Còn hàng: {{ product.SOLUONGTON }} sản phẩm
-                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <form action="{{ url_for('shop.add_to_cart', product_id=product.MASANPHAM) }}"
+                          method="POST"
+                          class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="next" value="{{ request.url }}">
+                        <button type="submit" class="btn btn-primary btn-lg px-4 shadow-sm">
+                            <i class="bi bi-cart-plus-fill me-2"></i> Thêm vào giỏ hàng
+                        </button>
+                    </form>
 
-                <!-- Form thêm sản phẩm vào giỏ hàng -->
-                <form action="{{ url_for('shop.add_to_cart', product_id=product.MASANPHAM) }}"
-                      method="POST"
-                      class="d-inline">
-
-                    <!-- CSRF Protection -->
-                    <input type="hidden"
-                           name="csrf_token"
-                           value="{{ csrf_token() }}">
-
-                    <!-- Giữ URL để quay về đúng trang -->
-                    <input type="hidden"
-                           name="next"
-                           value="{{ request.url }}">
-
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Thêm vào giỏ hàng
-                    </button>
-
-                </form>
+                    <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-primary btn-lg px-4">
+                        <i class="bi bi-bag-check me-2"></i> Xem giỏ hàng
+                    </a>
+                </div>
 
                 {% else %}
-
-                <p>
-                    <span class="badge bg-secondary fs-6">
-                        Hết hàng
-                    </span>
-                </p>
-
-                <button class="btn btn-secondary" disabled>
-                    Hết hàng
+                <div class="d-flex align-items-center gap-2 text-secondary fw-semibold mb-3">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <span class="badge bg-secondary fs-6">Hết hàng</span>
+                </div>
+                <button class="btn btn-secondary btn-lg px-4" disabled>
+                    Sản phẩm tạm hết hàng
                 </button>
-
-                {% endif %}
-
-                <a href="{{ url_for('shop.cart') }}"
-                   class="btn btn-outline-primary ms-2">
+                <a href="{{ url_for('shop.cart') }}" class="btn btn-outline-secondary btn-lg ms-2">
                     Xem giỏ hàng
                 </a>
-
+                {% endif %}
             </div>
+
+            <!-- Trust features -->
+            <div class="row g-2 text-muted small pt-2 border-top">
+                <div class="col-6">
+                    <i class="bi bi-truck text-primary me-1"></i> Giao hàng tận nơi toàn quốc
+                </div>
+                <div class="col-6">
+                    <i class="bi bi-arrow-repeat text-success me-1"></i> Đổi trả dễ dàng trong 7 ngày
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-body">
-        <h4 class="mb-1">Đánh giá sản phẩm</h4>
-        <p class="text-muted">
-            {% if review_count %}
-                <span class="text-warning fs-5">★</span>
-                <strong>{{ avg_rating }}</strong>/5 ({{ review_count }} đánh giá)
-            {% else %}
-                Chưa có đánh giá nào.
-            {% endif %}
-        </p>
+<!-- Customer Reviews Section -->
+<div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-3 border-bottom">
+        <div>
+            <h4 class="fw-bold mb-1">Đánh Giá Từ Khách Hàng</h4>
+            <p class="text-muted small mb-0">
+                {% if review_count %}
+                    <span class="text-warning fs-5">★</span>
+                    <strong>{{ avg_rating }}</strong>/5 ({{ review_count }} đánh giá)
+                {% else %}
+                    Chưa có đánh giá nào.
+                {% endif %}
+            </p>
+        </div>
+    </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} rounded-3 shadow-sm mb-4">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
 
-        {% if current_user.is_authenticated %}
-        <form method="POST" action="{{ url_for('shop.submit_review', id=product.MASANPHAM) }}" class="mb-4">
+    <!-- Review Form -->
+    {% if current_user.is_authenticated %}
+    <div class="card bg-light border-0 rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-pencil-square text-primary me-2"></i>Gửi đánh giá của bạn</h5>
+        <form method="POST" action="{{ url_for('shop.submit_review', id=product.MASANPHAM) }}">
             {% if csrf_token is defined %}
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             {% endif %}
-            <div class="mb-2">
-                <label class="form-label">Số sao</label>
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Mức độ hài lòng (Số sao)</label>
                 <select name="rating" class="form-select w-auto" required>
-                    <option value="">-- Chọn --</option>
-                    {% for i in [5, 4, 3, 2, 1] %}
-                    <option value="{{ i }}">{{ i }} sao</option>
-                    {% endfor %}
+                    <option value="">-- Chọn số sao --</option>
+                    <option value="5">★★★★★ 5 sao - Xuất sắc</option>
+                    <option value="4">★★★★☆ 4 sao - Rất tốt</option>
+                    <option value="3">★★★☆☆ 3 sao - Bình thường</option>
+                    <option value="2">★★☆☆☆ 2 sao - Kém</option>
+                    <option value="1">★☆☆☆☆ 1 sao - Rất tệ</option>
                 </select>
             </div>
-            <div class="mb-2">
-                <label class="form-label">Nhận xét</label>
-                <textarea name="comment" class="form-control" rows="3" maxlength="1000"></textarea>
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Nhận xét chi tiết</label>
+                <textarea name="comment" class="form-control" rows="3" maxlength="1000" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm">Gửi đánh giá</button>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-send me-1"></i> Gửi đánh giá
+            </button>
         </form>
-        {% else %}
-        <div class="alert alert-info">
-            Vui lòng <a href="{{ url_for('auth.login') }}">đăng nhập</a> để gửi đánh giá.
-        </div>
-        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-info border-0 rounded-4 p-3 d-flex align-items-center gap-2 mb-4">
+        <i class="bi bi-info-circle-fill fs-5"></i>
+        <span>Vui lòng <a href="{{ url_for('auth.login') }}" class="fw-bold text-decoration-none">đăng nhập</a> để gửi đánh giá sản phẩm.</span>
+    </div>
+    {% endif %}
 
+    <!-- Reviews List -->
+    {% if reviews %}
+    <div class="reviews-list">
         {% for r in reviews %}
-        <div class="border-top py-2">
-            <strong>{{ r.user.HOTEN if r.user else 'Người dùng' }}</strong>
-            <span class="text-warning">{{ '★' * r.SOSAO }}{{ '☆' * (5 - r.SOSAO) }}</span>
-            <small class="text-muted ms-2">{{ r.NGAYTAO.strftime('%d/%m/%Y') }}</small>
-            {% if r.NOIDUNG %}<p class="mb-0">{{ r.NOIDUNG }}</p>{% endif %}
+        <div class="review-item-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="user-avatar-badge">
+                        {{ (r.user.HOTEN if r.user else 'U')[0]|upper }}
+                    </div>
+                    <div>
+                        <strong class="d-block text-dark">{{ r.user.HOTEN if r.user else 'Người dùng' }}</strong>
+                        <span class="text-warning rating-stars">{{ '★' * r.SOSAO }}{{ '☆' * (5 - r.SOSAO) }}</span>
+                    </div>
+                </div>
+                <small class="text-muted">{{ r.NGAYTAO.strftime('%d/%m/%Y') }}</small>
+            </div>
+            {% if r.NOIDUNG %}
+            <p class="text-secondary mb-0 ms-5 ps-1">{{ r.NOIDUNG }}</p>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <p class="text-muted fst-italic">Chưa có nhận xét nào cho sản phẩm này. Hãy là người đầu tiên chia sẻ cảm nhận!</p>
+    {% endif %}
+
 </div>
+
 {% endif %}
 
 {% endblock %}
