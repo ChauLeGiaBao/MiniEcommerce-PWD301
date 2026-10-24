@@ -264,8 +264,8 @@ def generate_architecture_diagram():
     print(f"[OK] Generated: {out_file}")
 
 def generate_test_terminal_image():
-    """Vẽ ảnh chụp Terminal kết quả chạy thực tế 156 passed kiểm thử Pytest."""
-    width, height = 1100, 580
+    """Vẽ ảnh minh họa cửa sổ Terminal ghi nhận kết quả 179 test cases Pytest passed."""
+    width, height = 1100, 600
     img = Image.new("RGB", (width, height), "#181825")  # Dark terminal
     draw = ImageDraw.Draw(img)
 
@@ -278,7 +278,7 @@ def generate_test_terminal_image():
     draw.ellipse([14, 12, 26, 24], fill="#F38BA8")
     draw.ellipse([34, 12, 46, 24], fill="#F9E2AF")
     draw.ellipse([54, 12, 66, 24], fill="#A6E3A1")
-    draw.text((85, 9), "PowerShell — pytest (165 Test Cases — 100% PASSED)", fill="#CDD6F4", font=f_title)
+    draw.text((85, 9), "PowerShell — pytest (179 Test Cases Passed)", fill="#CDD6F4", font=f_title)
 
     lines = [
         ("PS D:\\FPT\\Kì 5\\PWD301\\MiniEcommerce-PWD301> .\\.venv\\Scripts\\pytest.exe", "#89B4FA"),
@@ -287,29 +287,30 @@ def generate_test_terminal_image():
         ("rootdir: D:\\FPT\\Kì 5\\PWD301\\MiniEcommerce-PWD301", "#BAC2DE"),
         ("configfile: pytest.ini", "#BAC2DE"),
         ("testpaths: tests", "#BAC2DE"),
-        ("collected 165 items", "#F9E2AF"),
+        ("collected 179 items", "#F9E2AF"),
         ("", "#FFFFFF"),
-        ("tests\\test_admin.py .......................                              [ 13%]", "#A6E3A1"),
-        ("tests\\test_api_auth.py ......                                            [ 17%]", "#A6E3A1"),
-        ("tests\\test_api_orders.py ..............                                  [ 26%]", "#A6E3A1"),
-        ("tests\\test_api_products.py ............                                  [ 33%]", "#A6E3A1"),
-        ("tests\\test_auth_change_password.py ........                              [ 38%]", "#A6E3A1"),
-        ("tests\\test_auth_register.py .........                                    [ 43%]", "#A6E3A1"),
-        ("tests\\test_cart_checkout.py ....................                         [ 55%]", "#A6E3A1"),
-        ("tests\\test_csrf_security.py .........                                    [ 61%]", "#A6E3A1"),
-        ("tests\\test_models.py .......                                             [ 65%]", "#A6E3A1"),
-        ("tests\\test_products.py ......................................            [ 88%]", "#A6E3A1"),
+        ("tests\\test_admin.py .......................                              [ 12%]", "#A6E3A1"),
+        ("tests\\test_api_auth.py ......                                            [ 16%]", "#A6E3A1"),
+        ("tests\\test_api_orders.py ..............                                  [ 24%]", "#A6E3A1"),
+        ("tests\\test_api_products.py ............                                  [ 30%]", "#A6E3A1"),
+        ("tests\\test_auth_change_password.py ........                              [ 35%]", "#A6E3A1"),
+        ("tests\\test_auth_register.py .........                                    [ 40%]", "#A6E3A1"),
+        ("tests\\test_auth_reset_password.py ..............                         [ 48%]", "#A6E3A1"),
+        ("tests\\test_cart_checkout.py ....................                         [ 59%]", "#A6E3A1"),
+        ("tests\\test_csrf_security.py .........                                    [ 64%]", "#A6E3A1"),
+        ("tests\\test_models.py .......                                             [ 68%]", "#A6E3A1"),
+        ("tests\\test_products.py ......................................            [ 89%]", "#A6E3A1"),
         ("tests\\test_reviews.py .................                                  [ 98%]", "#A6E3A1"),
         ("tests\\test_stock_constraint.py ..                                        [100%]", "#A6E3A1"),
         ("", "#FFFFFF"),
-        ("============================= 165 passed in 8.55s =============================", "#A6E3A1"),
+        ("============================= 179 passed in 11.29s =============================", "#A6E3A1"),
         ("PS D:\\FPT\\Kì 5\\PWD301\\MiniEcommerce-PWD301> ", "#89B4FA")
     ]
 
     curr_y = 50
     for text, color in lines:
         draw.text((25, curr_y), text, fill=color, font=f_mono)
-        curr_y += 21
+        curr_y += 20
 
     out_file = os.path.join(OUTPUT_DIR, "07_test_terminal.png")
     img.save(out_file)

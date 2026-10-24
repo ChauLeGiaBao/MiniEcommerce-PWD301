@@ -2,6 +2,7 @@
 from urllib.parse import urljoin, urlparse
 
 from flask import (
+    current_app,
     flash,
     redirect,
     render_template,
@@ -15,6 +16,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.auth import auth_bp
@@ -342,4 +344,112 @@ def change_password():
             return render_template("change_password.html"), 500
 
     return render_template("change_password.html")
+
+
+def generate_reset_token(email):
+    """Tạo token đặt lại mật khẩu có chữ ký bảo mật và giới hạn thời gian (30 phút)."""
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return serializer.dumps(email, salt="password-reset-salt")
+
+
+def verify_reset_token(token, max_age=1800):
+    """
+    Xác thực token đặt lại mật khẩu.
+    Trả về email nếu hợp lệ và chưa quá hạn (mặc định 1800 giây = 30 phút),
+    ngược lại trả về None.
+    """
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    try:
+        email = serializer.loads(token, salt="password-reset-salt", max_age=max_age)
+        return email
+    except (SignatureExpired, BadSignature):
+        return None
+
+
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    """
+    Xử lý yêu cầu quên mật khẩu.
+    Người dùng nhập email đăng ký; hệ thống sinh token bảo mật và tạo liên kết đặt lại mật khẩu.
+    Tuân thủ nguyên tắc bảo mật: thông báo trung lập không làm lộ việc email có tồn tại hay không.
+    Trong môi trường demo/dev, liên kết đặt lại mật khẩu được cung cấp trực tiếp trên giao diện.
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for("shop.products"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Vui lòng nhập địa chỉ email của bạn.", "warning")
+            return render_template("forgot_password.html", email=email), 400
+
+        user = User.query.filter_by(EMAIL=email).first()
+
+        dev_reset_url = None
+        if user and user.TRANGTHAIND == 1:
+            token = generate_reset_token(user.EMAIL)
+            dev_reset_url = url_for("auth.reset_password", token=token, _external=True)
+
+        # Thông báo thành công chung (chống rò rỉ thông tin tài khoản)
+        flash(
+            "Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được khởi tạo thành công.",
+            "info"
+        )
+        return render_template(
+            "forgot_password.html",
+            email_submitted=True,
+            email=email,
+            dev_reset_url=dev_reset_url
+        )
+
+    return render_template("forgot_password.html")
+
+
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    """
+    Xác thực token và cập nhật mật khẩu mới cho người dùng.
+    Token có hạn sử dụng trong 30 phút.
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for("shop.products"))
+
+    email = verify_reset_token(token)
+    if not email:
+        flash("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng gửi yêu cầu mới.", "danger")
+        return redirect(url_for("auth.forgot_password"))
+
+    user = User.query.filter_by(EMAIL=email).first()
+    if not user or user.TRANGTHAIND != 1:
+        flash("Tài khoản không tồn tại hoặc đã bị vô hiệu hóa.", "danger")
+        return redirect(url_for("auth.login"))
+
+    if request.method == "POST":
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not new_password or not confirm_password:
+            flash("Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu.", "warning")
+            return render_template("reset_password.html", token=token), 400
+
+        if len(new_password) < 6:
+            flash("Mật khẩu mới phải có ít nhất 6 ký tự.", "warning")
+            return render_template("reset_password.html", token=token), 400
+
+        if new_password != confirm_password:
+            flash("Xác nhận mật khẩu mới không khớp.", "warning")
+            return render_template("reset_password.html", token=token), 400
+
+        user.PASSWORD_HASH = generate_password_hash(new_password)
+        try:
+            db.session.commit()
+            flash("Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.", "success")
+            return redirect(url_for("auth.login"))
+        except Exception:
+            db.session.rollback()
+            flash("Đã xảy ra lỗi khi lưu mật khẩu. Vui lòng thử lại sau.", "danger")
+            return render_template("reset_password.html", token=token), 500
+
+    return render_template("reset_password.html", token=token)
 

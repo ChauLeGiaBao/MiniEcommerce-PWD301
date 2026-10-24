@@ -2,7 +2,7 @@
 """
 Script tạo tài liệu báo cáo đồ án Word (.docx) chuyên nghiệp, chuẩn xác và toàn diện:
 Đề tài: Topic 8 - Mini E-Commerce Store (Môn học PWD301 - FPT University).
-Báo cáo đối chiếu chuẩn 100% với mã nguồn GitHub ChauLeGiaBao/MiniEcommerce-PWD301.
+Báo cáo chuẩn hóa, đối chiếu trung thực với mã nguồn GitHub ChauLeGiaBao/MiniEcommerce-PWD301.
 """
 
 import os
@@ -73,26 +73,52 @@ def build_comprehensive_document():
     style_normal.paragraph_format.line_spacing = 1.2
     style_normal.paragraph_format.space_after = Pt(4)
 
-    # Helper: Tiêu đề H1
+    # Cấu hình Header & Footer động
+    footer = section.footer
+    p_footer = footer.paragraphs[0]
+    p_footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    r_foot_label = p_footer.add_run("Báo cáo Đồ án Topic 8 — Mini E-Commerce | Trang ")
+    r_foot_label.font.name = 'Calibri'
+    r_foot_label.font.size = Pt(8.5)
+    r_foot_label.font.color.rgb = color_gray
+    
+    # Trường PAGE động của Word
+    fld_page = parse_xml(r'<w:fldSimple %s w:instr="PAGE"/>' % nsdecls('w'))
+    p_footer._p.append(fld_page)
+
+    r_foot_slash = p_footer.add_run(" / ")
+    r_foot_slash.font.name = 'Calibri'
+    r_foot_slash.font.size = Pt(8.5)
+    r_foot_slash.font.color.rgb = color_gray
+
+    # Trường NUMPAGES động của Word
+    fld_numpages = parse_xml(r'<w:fldSimple %s w:instr="NUMPAGES"/>' % nsdecls('w'))
+    p_footer._p.append(fld_numpages)
+
+    # Helper: Tiêu đề H1 sử dụng style Heading 1 để Word tự động nhận diện mục lục
     def add_h1(text):
-        p = doc.add_paragraph()
+        p = doc.add_paragraph(style='Heading 1')
         p.paragraph_format.space_before = Pt(16)
         p.paragraph_format.space_after = Pt(6)
         p.paragraph_format.keep_with_next = True
+        p.text = ""
         r = p.add_run(text)
-        r.font.size = Pt(15)
+        r.font.name = 'Calibri'
+        r.font.size = Pt(14)
         r.bold = True
         r.font.color.rgb = color_primary
         return p
 
-    # Helper: Tiêu đề H2
+    # Helper: Tiêu đề H2 sử dụng style Heading 2
     def add_h2(text):
-        p = doc.add_paragraph()
+        p = doc.add_paragraph(style='Heading 2')
         p.paragraph_format.space_before = Pt(11)
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.keep_with_next = True
+        p.text = ""
         r = p.add_run(text)
-        r.font.size = Pt(12)
+        r.font.name = 'Calibri'
+        r.font.size = Pt(11.5)
         r.bold = True
         r.font.color.rgb = color_secondary
         return p
@@ -152,7 +178,7 @@ def build_comprehensive_document():
         p.paragraph_format.line_spacing = 1.1
         r = p.add_run(text)
         r.font.name = "Consolas"
-        r.font.size = Pt(9.0)
+        r.font.size = Pt(8.5)
         r.font.color.rgb = RGBColor(30, 41, 59)
         doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
@@ -260,7 +286,7 @@ def build_comprehensive_document():
     cover_info = [
         ("Môn học:", "PWD301 — Lập trình ứng dụng Web với Python (Web App Development with Python)"),
         ("Đề tài chỉ định:", "Topic 8: Mini E-Commerce Store"),
-        ("Nhóm sinh viên thực hiện:", "Châu Lê Gia Bảo (Nhóm trưởng) • Hà Trung Kiên • Trần Vũ Hoàng Long • Minh Tuấn"),
+        ("Nhóm sinh viên thực hiện:", "Châu Lê Gia Bảo (Nhóm trưởng) • Hà Trung Kiên • Lâm Đức Tuấn • Trần Vũ Hoàng Long"),
         ("Công nghệ chính:", "Python 3.12, Flask 3.1.3, SQLAlchemy 2.0, SQL Server 2022 / SQLite, Docker, JWT, AJAX"),
         ("Thời gian thực hiện:", "Học kỳ Fall 2026 (Học kỳ 5 — Năm học 2026 – 2027)"),
         ("Kho lưu trữ mã nguồn:", "GitHub: ChauLeGiaBao/MiniEcommerce-PWD301 (Nhánh main)")
@@ -293,34 +319,33 @@ def build_comprehensive_document():
 
     # ==================== MỤC LỤC TỔNG QUAN ====================
     add_h1("MỤC LỤC TỔNG QUAN BÁO CÁO")
-    toc_items = [
-        ("PHẦN 1: MỤC TIÊU ĐỀ TÀI & NGHIỆP VỤ CỐT LÕI", "Trang 2"),
-        ("PHẦN 2: THIẾT KẾ KIẾN TRÚC & CƠ SỞ DỮ LIỆU", "Trang 2"),
-        ("    2.1. Ngăn xếp công nghệ chi tiết (Technology Stack)", "Trang 2"),
-        ("    2.2. Kiến trúc Application Factory & Phân hệ Blueprints", "Trang 3"),
-        ("    2.3. Thiết kế Cơ sở dữ liệu chuẩn hóa (6 Bảng & Ràng buộc)", "Trang 4"),
-        ("    2.4. Danh mục Tính năng cốt lõi & Hệ thống 7 RESTful API", "Trang 5"),
-        ("PHẦN 3: GIAO DIỆN NGƯỜI DÙNG & MINH CHỨNG THỰC NGHIỆM", "Trang 6"),
-        ("PHẦN 4: HƯỚNG DẪN CÀI ĐẶT & TRIỂN KHAI HỆ THỐNG", "Trang 7"),
-        ("    4.1. Cách 1: Chạy trực tiếp với SQLite (Local Testing / Demo)", "Trang 7"),
-        ("    4.2. Cách 2: Triển khai Docker Compose & SQL Server 2022 (Port 5050)", "Trang 7"),
-        ("    4.3. Bảng tài khoản thử nghiệm có sẵn (Demo Accounts - 3 Roles)", "Trang 8"),
-        ("    4.4. Bộ kiểm thử tự động Pytest (156 Test Cases Passed)", "Trang 8"),
-        ("PHẦN 5: PHÂN CÔNG CÔNG VIỆC & QUY TRÌNH PHÁT TRIỂN", "Trang 9"),
-        ("PHẦN 6: ĐÁNH GIÁ KẾT QUẢ, HẠN CHẾ & HƯỚNG PHÁT TRIỂN", "Trang 10"),
-        ("PHỤ LỤC A: NHẬT KÝ SỬ DỤNG AI CÓ TRÁCH NHIỆM (AI USAGE LOG)", "Trang 11"),
-        ("PHỤ LỤC B: TÀI LIỆU THAM KHẢO & QUY CHUẨN KỸ THUẬT", "Trang 12")
+
+    p_toc_note = doc.add_paragraph()
+    r_tn = p_toc_note.add_run(
+        "Tài liệu sử dụng định dạng Heading chuẩn của Microsoft Word. Người đọc có thể sử dụng khung Navigation Pane (Ctrl + F) "
+        "hoặc nhấp chuột phải vào trường mục lục bên dưới chọn 'Update Field' để cập nhật số trang tự động:"
+    )
+    r_tn.font.italic = True
+    r_tn.font.size = Pt(9.0)
+    r_tn.font.color.rgb = color_gray
+
+    # Thêm trường TOC tự động của Word
+    p_toc_field = doc.add_paragraph()
+    fld_toc = parse_xml(r'<w:fldSimple %s w:instr="TOC \o &quot;1-2&quot; \h \z \u"/>' % nsdecls('w'))
+    p_toc_field._p.append(fld_toc)
+
+    # Bảng phân mục nội dung báo cáo chi tiết
+    toc_structure = [
+        ("PHẦN 1", "MỤC TIÊU ĐỀ TÀI & NGHIỆP VỤ CỐT LÕI", "Bối cảnh đề tài, 7 mục tiêu kỹ thuật trọng tâm & luồng nghiệp vụ mua sắm trọn vẹn"),
+        ("PHẦN 2", "THIẾT KẾ KIẾN TRÚC & CƠ SỞ DỮ LIỆU", "Stack công nghệ, Application Factory, 4 Blueprints, Ma trận RBAC 3 vai trò, ERD 6 bảng & 7 RESTful API"),
+        ("PHẦN 3", "GIAO DIỆN NGƯỜI DÙNG & MINH CHỨNG THỰC NGHIỆM", "Ảnh chụp màn hình thực tế: Danh mục sản phẩm, Giỏ hàng AJAX, Thanh toán COD, Admin Dashboard, Reviews"),
+        ("PHẦN 4", "HƯỚNG DẪN CÀI ĐẶT & TRIỂN KHAI HỆ THỐNG", "Chạy SQLite cục bộ, Docker Compose + SQL Server 2022, Seed dữ liệu & Bộ 179 bài kiểm thử Pytest"),
+        ("PHẦN 5", "PHÂN CÔNG CÔNG VIỆC & QUY TRÌNH PHÁT TRIỂN", "Bảng phân công trách nhiệm 4 thành viên theo phân hệ thực tế, tỷ lệ đóng góp & Git Feature Branch"),
+        ("PHẦN 6", "ĐÁNH GIÁ KẾT QUẢ, HẠN CHẾ & HƯỚNG PHÁT TRIỂN", "Đối chiếu yêu cầu đề bài, danh mục hạn chế kỹ thuật hiện tại và lộ trình mở rộng tương lai"),
+        ("PHỤ LỤC A", "NHẬT KÝ SỬ DỤNG AI CÓ TRÁCH NHIỆM (AI USAGE LOG)", "Minh bạch 11 mốc sử dụng AI: Prompt, kết quả đề xuất, mã nguồn áp dụng và kiểm tra của sinh viên"),
+        ("PHỤ LỤC B", "TÀI LIỆU THAM KHẢO & QUY CHUẨN KỸ THUẬT", "Tài liệu chính thức Flask, SQLAlchemy, OWASP Top 10, Microsoft SQL Server & Bootstrap 5.3")
     ]
-    for title, pg in toc_items:
-        p_toc = doc.add_paragraph()
-        p_toc.paragraph_format.space_after = Pt(2)
-        r_t = p_toc.add_run(title)
-        if "PHẦN" in title or "PHỤ LỤC" in title:
-            r_t.bold = True
-            r_t.font.color.rgb = color_primary
-        else:
-            r_t.font.color.rgb = color_dark
-        p_toc.add_run(" " + "." * max(10, 85 - len(title)) + " " + pg)
+    add_table(["Phần", "Nội dung đề mục chính", "Mô tả phạm vi chi tiết"], toc_structure, [1.0, 2.7, 3.07])
 
     doc.add_page_break()
 
@@ -338,11 +363,11 @@ def build_comprehensive_document():
     objectives = [
         ("Nghiệp vụ thương mại điện tử trọn vẹn: ", "Cung cấp đầy đủ luồng mua sắm gồm duyệt danh mục, tìm kiếm từ khóa không phân biệt hoa thường, lọc giá đa tiêu chí, giỏ hàng real-time, thanh toán COD, quản lý lịch sử đơn cá nhân (/my-orders) và gửi nhận xét đánh giá sản phẩm."),
         ("Tương tác mượt mà bằng AJAX: ", "Cập nhật giỏ hàng tức thời (thêm món, tăng/giảm số lượng, xóa sản phẩm) thông qua Fetch API trong cart.js mà không cần tải lại toàn bộ trang web (Zero Page Reload), tự động gửi kèm X-CSRFToken header."),
-        ("Xử lý giao dịch an toàn (Chống bán âm kho): ", "Ứng dụng cơ chế khóa bi quan (Pessimistic Locking - with_for_update) trên SQL Server kết hợp lớp bảo vệ thứ hai bằng ràng buộc cơ sở dữ liệu CHECK (SOLUONGTON >= 0) và transaction nguyên tử trong SQLAlchemy."),
-        ("Bảo mật đa tầng theo tiêu chuẩn OWASP: ", "Mật khẩu băm an toàn bằng thư viện Werkzeug (thuật toán PBKDF2:SHA256/scrypt); CSRFProtect kích hoạt trên toàn bộ các biểu mẫu state-changing; auto-escaping chống XSS; kiểm tra an toàn URL chống Open Redirect (is_safe_url); cookie bảo mật HttpOnly."),
+        ("Xử lý giao dịch an toàn (Chống bán âm kho): ", "Ứng dụng cơ chế khóa bi quan (with_for_update) ở tầng ORM kết hợp lớp bảo vệ chắc chắn bằng ràng buộc toàn vẹn cơ sở dữ liệu CHECK (SOLUONGTON >= 0) và transaction nguyên tử trong SQLAlchemy."),
+        ("Bảo mật đa tầng theo tiêu chuẩn OWASP: ", "Mật khẩu băm an toàn bằng thư viện Werkzeug (thuật toán scrypt mặc định từ Werkzeug 3.0+); CSRFProtect kích hoạt trên toàn bộ các biểu mẫu state-changing; auto-escaping chống XSS; kiểm tra an toàn URL chống Open Redirect (is_safe_url); cookie bảo mật HttpOnly; cơ chế khôi phục mật khẩu qua token có chữ ký bảo mật 30 phút."),
         ("Phân quyền 3 vai trò (RBAC): ", "Phân định quyền hạn rõ ràng giữa Quản trị viên (Admin), Nhân viên vận hành (Staff) và Khách hàng (Customer) thông qua Flask-Login và bộ lọc before_request."),
         ("Cung cấp 7 RESTful API chuẩn JSON có JWT: ", "Hệ thống xây dựng 7 API endpoints hoàn chỉnh có xác thực qua JSON Web Token (Bearer Token), kiểm tra trạng thái tài khoản trực tiếp từ database trước khi cấp quyền."),
-        ("Hỗ trợ đa môi trường & Kiểm thử tự động: ", "Vận hành linh hoạt trên 2 môi trường (SQLite cho Local dev/chấm bài và SQL Server 2022 qua Docker Compose cổng 5050); xác thực bằng bộ kiểm thử tự động gồm 156/156 test cases passed.")
+        ("Hỗ trợ đa môi trường & Kiểm thử tự động: ", "Vận hành linh hoạt trên 2 môi trường (SQLite cho Local dev/chấm bài và SQL Server 2022 qua Docker Compose cổng 5050); xác thực bằng bộ kiểm thử tự động gồm 179/179 test cases passed.")
     ]
     for bold_text, normal_text in objectives:
         p_item = doc.add_paragraph(style='List Bullet')
@@ -357,16 +382,16 @@ def build_comprehensive_document():
 
     add_h2("2.1. Ngăn xếp công nghệ chi tiết (Technology Stack)")
     tech_data = [
-        ("Back-end Framework", "Python 3.12 + Flask 3.1.3", "Mô hình Application Factory (create_app), chia 4 Blueprints độc lập"),
+        ("Ngôn ngữ & Back-end", "Python 3.12 + Flask 3.1.3", "Mô hình Application Factory (create_app), chia 4 Blueprints độc lập"),
         ("Cơ sở dữ liệu chính", "SQL Server 2022 Express", "Chạy trong Docker container (Port 14333, DB: MiniEcommerceDB) với ODBC Driver 18"),
         ("Cơ sở dữ liệu phát triển", "SQLite 3 (instance/dev.db)", "Phục vụ chạy test nhanh, phát triển local và chấm bài không cần cài Docker"),
         ("ORM & Quản lý Migration", "Flask-SQLAlchemy 3.1 + Alembic", "Truy vấn hướng đối tượng tránh SQL Injection; 5 phiên bản migration lịch sử"),
         ("Xác thực & Quản trị phiên", "Flask-Login 0.6.3", "Quản lý phiên đăng nhập người dùng, UserMixin, bảo vệ session bằng cookie HttpOnly"),
-        ("Mã hóa mật khẩu", "Werkzeug Security 3.1.8", "Hàm generate_password_hash / check_password_hash với chuẩn PBKDF2:SHA256"),
+        ("Mã hóa mật khẩu & Token", "Werkzeug 3.1.8 + itsdangerous", "Mật khẩu băm chuẩn scrypt; token đặt lại mật khẩu URLSafeTimed có chữ ký 30 phút"),
         ("Bảo mật API (JWT)", "Flask-JWT-Extended 4.7.1", "Tạo và kiểm tra JWT Bearer Token, kiểm tra trực tiếp user từ DB tại mỗi request"),
-        ("Bảo vệ Form (CSRF)", "Flask-WTF 1.3.0 + CSRFProtect", "Tự động sinh và xác thực CSRF Token cho mọi yêu cầu POST/PUT; X-CSRFToken cho AJAX"),
+        ("Bảo vệ Form (CSRF)", "Flask-WTF 1.3.0 + CSRFProtect", "Bảo vệ CSRF toàn cục cho mọi POST/PUT; form checkout dùng FlaskForm; AJAX cart gửi X-CSRFToken"),
         ("Front-end & UI Styling", "Jinja2, Bootstrap 5.3, Vanilla JS", "Giao diện Glassmorphism hiện đại, responsive đa thiết bị, Fetch API cho giỏ hàng"),
-        ("Kiểm thử tự động", "Pytest 9.1.1 (156 Test Cases)", "Kiểm tra tự động toàn diện: CSRF, giỏ hàng, checkout, RBAC 3 vai trò, 7 REST API")
+        ("Kiểm thử tự động", "Pytest 9.1.1 (179 Test Cases)", "Kiểm tra tự động toàn diện: CSRF, giỏ hàng, checkout, RBAC 3 vai trò, 7 REST API, Quên/Đổi mật khẩu")
     ]
     add_table(["Thành phần", "Công nghệ sử dụng", "Mô tả vai trò kỹ thuật"], tech_data, [1.5, 2.0, 3.27])
 
@@ -382,7 +407,7 @@ def build_comprehensive_document():
     blueprints = [
         ("app/shop: ", "Giao diện khách hàng: duyệt danh mục, chi tiết sản phẩm, giỏ hàng Session kết hợp Fetch API, thanh toán COD, xem đơn hàng của tôi (/my-orders), gửi đánh giá sản phẩm."),
         ("app/admin: ", "Phân hệ quản trị dành cho Admin và Staff: Dashboard thống kê doanh thu, người dùng và phân loại đơn, quản lý sản phẩm (CRUD dành riêng cho Admin), xem và cập nhật trạng thái đơn hàng."),
-        ("app/auth: ", "Phân hệ xác thực: đăng ký tài khoản (/auth/register), đăng nhập (/auth/login) với Flask-Login, đổi mật khẩu an toàn (/auth/change-password), đăng xuất (/auth/logout), chống chuyển hướng độc hại với is_safe_url()."),
+        ("app/auth: ", "Phân hệ xác thực & an toàn: đăng ký tài khoản (/auth/register), đăng nhập (/auth/login) với Flask-Login, đổi mật khẩu (/auth/change-password), quên và đặt lại mật khẩu an toàn (/auth/forgot-password, /auth/reset-password/<token>), đăng xuất (/auth/logout), chống chuyển hướng độc hại với is_safe_url()."),
         ("app/api: ", "Phân hệ RESTful API: cung cấp 7 endpoints định dạng JSON có xác thực qua Flask-JWT-Extended (Bearer Token), sẵn sàng tích hợp Mobile App hoặc đối tác ngoại vi.")
     ]
     for b_title, b_desc in blueprints:
@@ -411,7 +436,7 @@ def build_comprehensive_document():
     add_image_with_caption("05_erd_diagram.png", "Hình 2: Sơ đồ thực thể quan hệ cơ sở dữ liệu (ERD) 6 bảng chuẩn hóa", width_inches=6.3)
 
     db_data = [
-        ("NGUOIDUNG", "MANGUOIDUNG (PK, INT)\nHOTEN (NVARCHAR(200))\nEMAIL (VARCHAR(200))\nSDT (VARCHAR(10))\nNGAYSINH (DATE)\nPASSWORD_HASH (VARCHAR(255))\nROLE (VARCHAR(20))\nTRANGTHAIND (INT, def=1)", "Lưu trữ tài khoản với 3 roles: 'admin', 'staff', 'customer'. Mật khẩu băm bằng Werkzeug PBKDF2/scrypt. Email được validate trùng ở tầng form đăng ký. Trạng thái 1: Hoạt động, 0: Khóa."),
+        ("NGUOIDUNG", "MANGUOIDUNG (PK, INT)\nHOTEN (NVARCHAR(200))\nEMAIL (VARCHAR(200))\nSDT (VARCHAR(10))\nNGAYSINH (DATE)\nPASSWORD_HASH (VARCHAR(255))\nROLE (VARCHAR(20))\nTRANGTHAIND (INT, def=1)", "Lưu trữ tài khoản với 3 roles: 'admin', 'staff', 'customer'. Mật khẩu băm bằng Werkzeug scrypt. Email được validate trùng ở tầng form đăng ký. Trạng thái 1: Hoạt động, 0: Khóa."),
         ("DANHMUC", "MADANHMUC (PK, INT)\nTENDM (NVARCHAR(50))", "Lưu 4 danh mục phẳng 1 cấp: Điện thoại (11), Laptop (12), Thời trang nam (21), Thời trang nữ (22). Đã loại bỏ cột MOTA và MADMCHA không dùng."),
         ("SANPHAM", "MASANPHAM (PK, INT)\nTENSPH (NVARCHAR(200))\nHINHANH (VARCHAR(500))\nDONGIA (NUMERIC(18,2))\nMOTA (NVARCHAR(500))\nSOLUONGTON (INT, def=0)\nTRANGTHAISPH (INT, def=1)\nMADANHMUC (FK, INT)", "Lưu 23 sản phẩm thực tế kèm link ảnh. Ràng buộc cấp cơ sở dữ liệu CHECK (SOLUONGTON >= 0) (tên CK_SANPHAM_SOLUONGTON qua migration 4877af4546c5) bảo đảm không bao giờ âm kho. Trạng thái 1: Active, 0: Tạm ẩn."),
         ("DONHANG", "MADONHANG (PK, INT)\nMANGUOIDUNG (FK, INT, NULL)\nNGAYDAT (DATE)\nTONGGIATRI (NUMERIC(18,2))\nTRANGTHAI (INT, def=0)\nHOTENNHAN (NVARCHAR(200))\nDIACHIGIAO (NVARCHAR(300))\nSDTNHAN (VARCHAR(15))", "Quản lý đơn hàng. Khách vãng lai NULL MANGUOIDUNG nếu chưa gắn user. Trạng thái lưu dạng số nguyên 0–3: 0: Mới / Chờ xử lý, 1: Đang xử lý, 2: Hoàn thành, 3: Đã hủy. Cột tổng tiền là TONGGIATRI, số điện thoại là SDTNHAN."),
@@ -420,14 +445,14 @@ def build_comprehensive_document():
     ]
     add_table(["Tên Bảng", "Cột chính & Khóa", "Ý nghĩa nghiệp vụ & Ràng buộc"], db_data, [1.4, 2.5, 2.87])
 
-    add_h2("Cơ chế Khóa bi quan (Pessimistic Locking) & Phòng ngự đa tầng")
+    add_h2("Cơ chế Kiểm soát Tồn kho (Pessimistic Locking & Ràng buộc Cơ sở dữ liệu)")
     p_lock = doc.add_paragraph()
     p_lock.add_run(
-        "Để giải quyết triệt để lỗi race condition khi nhiều người dùng cùng lúc bấm thanh toán sản phẩm có số lượng tồn kho còn lại bằng 1, hệ thống triển khai giải pháp phòng thủ hai tầng:\n"
-        "• Lớp 1 (Khóa bi quan): Trong app/shop/cart_routes.py:254, truy vấn sản phẩm trước khi trừ tồn kho sử dụng mệnh đề with_for_update():\n"
+        "Để phòng ngừa nguy cơ race condition khi nhiều người dùng cùng lúc đặt mua sản phẩm có số lượng tồn kho giới hạn, hệ thống thiết kế cơ chế bảo vệ phối hợp:\n"
+        "• Định hướng Khóa bi quan ở tầng ORM: Trong app/shop/cart_routes.py:254, truy vấn sản phẩm trước khi trừ tồn kho được gán mệnh đề with_for_update():\n"
         "  db.select(SanPham).where(SanPham.MASANPHAM == item['product'].MASANPHAM).with_for_update()\n"
-        "  Trên Microsoft SQL Server (Docker / Production), câu lệnh sinh khóa độc quyền UPDLOCK/XLOCK trên dòng dữ liệu trong transaction, buộc các transaction đồng thời khác phải xếp hàng chờ cho đến khi transaction trước commit hoặc rollback.\n"
-        "• Lớp 2 (Ràng buộc toàn vẹn Database): Do SQLite (môi trường Local) bỏ qua with_for_update(), hệ thống có lớp phòng vệ thứ hai là ràng buộc cơ sở dữ liệu CHECK (SOLUONGTON >= 0). Nếu phát sinh race condition làm tồn kho âm, Database sẽ chặn ngay lập tức và ném ra ngoại lệ IntegrityError, kích hoạt db.session.rollback() an toàn."
+        "  Mục đích nhằm chuẩn bị sẵn cơ chế khóa hàng ở cấp CSDL đối với các hệ quản trị có hỗ trợ. Việc kiểm thử tải đồng thời quy mô lớn (stress test đa luồng đo lường mức độ cạnh tranh khóa trên SQL Server) được nhóm ghi nhận là nội dung nghiên cứu nâng cao trong tương lai.\n"
+        "• Lớp bảo vệ chắc chắn bằng Ràng buộc CSDL (Database Constraint): Nhằm đảm bảo tính toàn vẹn dữ liệu trên mọi môi trường (kể cả SQLite – vốn bỏ qua mệnh đề with_for_update), hệ thống thiết lập ràng buộc toàn vẹn cấp bảng CHECK (SOLUONGTON >= 0) (tên ràng buộc CK_SANPHAM_SOLUONGTON). Nếu phát sinh bất kỳ tình huống đồng thời nào cố tình làm tồn kho âm, hệ thống CSDL sẽ chặn ngay lập tức và ném ngoại lệ IntegrityError, kích hoạt db.session.rollback() để hủy bỏ toàn bộ giao dịch thanh toán."
     )
 
     add_h2("2.4. Danh mục Tính năng cốt lõi & Hệ thống 7 RESTful API")
@@ -436,7 +461,7 @@ def build_comprehensive_document():
         "Hệ thống cung cấp đầy đủ các tính năng người dùng phía Web và 7 API endpoints chuẩn RESTful xác thực qua JWT Bearer Token:"
     )
 
-    add_image_with_caption("08_api_postman.png", "Hình 3: Kiểm thử hệ thống 7 RESTful API và JWT Bearer Token", width_inches=6.3)
+    add_image_with_caption("08_api_postman.png", "Hình 3: Sơ đồ kịch bản kiểm thử 7 RESTful API và JWT Bearer Token", width_inches=6.3)
 
     api_data = [
         ("1", "POST", "/api/auth/token", "Công khai", "Nhận email và password dạng JSON; trả về Bearer JWT token có hạn 30 phút cùng thông tin user (id, name, role). Trả 401 nếu sai mật khẩu hoặc tài khoản bị khóa."),
@@ -451,7 +476,7 @@ def build_comprehensive_document():
 
     add_callout(
         "LƯU Ý NGHIỆP VỤ ĐẶT HÀNG",
-        "API không cung cấp endpoint POST /api/orders. Quy trình đặt hàng được thực hiện độc quyền thông qua giao diện Web tại route /checkout nhằm kiểm soát chặt chẽ giỏ hàng trong session, xác thực form chống CSRF và áp dụng giao dịch khóa bi quan an toàn."
+        "API không cung cấp endpoint POST /api/orders. Quy trình đặt hàng được thực hiện độc quyền thông qua giao diện Web tại route /checkout nhằm kiểm soát chặt chẽ giỏ hàng trong session, xác thực form chống CSRF và áp dụng giao dịch khóa an toàn."
     )
 
     # ==================== PHẦN 3 ====================
@@ -480,7 +505,7 @@ def build_comprehensive_document():
         "# hoặc: source .venv/bin/activate      # Trên macOS / Linux\n\n"
         "# Bước 2: Cài đặt thư viện phụ thuộc (nếu chưa cài)\n"
         "pip install -r requirements.txt\n\n"
-        "# Bước 3: Nạp dữ liệu mẫu 4 danh mục và 23 sản phẩm (nếu chưa nạp)\n"
+        "# Bước 3: Nạp dữ liệu mẫu 4 danh mục và 23 sản phẩm cùng 3 tài khoản demo\n"
         "python seed.py\n"
         "python create_test_users.py\n\n"
         "# Bước 4: Khởi động máy chủ phát triển Flask\n"
@@ -508,7 +533,11 @@ def build_comprehensive_document():
         "docker compose run --rm --no-deps web python -m scripts.bootstrap_db\n\n"
         "# Bước 5: Đánh dấu phiên bản migration hiện tại:\n"
         "docker compose run --rm --no-deps web flask --app run:app db stamp head\n\n"
-        "# Bước 6: Khởi chạy container Web:\n"
+        "# Bước 6: Nạp dữ liệu danh mục và 23 sản phẩm mẫu vào CSDL SQL Server:\n"
+        "docker compose run --rm --no-deps web python seed.py\n\n"
+        "# Bước 7: Khởi tạo 3 tài khoản thử nghiệm tương ứng 3 vai trò (Admin, Staff, Customer):\n"
+        "docker compose run --rm --no-deps web python create_test_users.py\n\n"
+        "# Bước 8: Khởi chạy container Web:\n"
         "docker compose up -d web\n\n"
         "# -> Truy cập ứng dụng tại địa chỉ: http://localhost:5050 (hoặc http://127.0.0.1:5050)\n"
         "# Để tắt toàn bộ hệ thống khi dừng kiểm tra:\n"
@@ -517,7 +546,7 @@ def build_comprehensive_document():
 
     add_h2("4.3. Bảng tài khoản thử nghiệm có sẵn (Demo Accounts - Đầy đủ 3 Roles)")
     p_acc = doc.add_paragraph()
-    p_acc.add_run("Hệ thống khởi tạo sẵn 3 tài khoản thử nghiệm tương ứng 3 vai trò trong ma trận RBAC:")
+    p_acc.add_run("Sau khi chạy lệnh nạp dữ liệu mẫu, hệ thống có sẵn 3 tài khoản thử nghiệm tương ứng 3 vai trò trong ma trận RBAC:")
 
     account_data = [
         ("Quản trị viên (Admin)", "admin@minishop.local", "Admin@123", "Toàn quyền: Dashboard thống kê, CRUD sản phẩm, duyệt và đổi trạng thái đơn hàng"),
@@ -526,14 +555,14 @@ def build_comprehensive_document():
     ]
     add_table(["Vai trò người dùng", "Email đăng nhập", "Mật khẩu", "Quyền hạn & Chức năng thực nghiệm"], account_data, [1.5, 1.8, 1.1, 2.37])
 
-    add_h2("4.4. Bộ kiểm thử tự động Pytest (165 Test Cases Passed)")
+    add_h2("4.4. Bộ kiểm thử tự động Pytest (179 Test Cases Passed)")
     p_test = doc.add_paragraph()
     p_test.add_run(
-        "Dự án tích hợp bộ 165 bài kiểm thử tự động với Pytest, chạy hoàn toàn độc lập với database in-memory, "
-        "bảo đảm 100% các tiêu chí bảo mật, nghiệp vụ và API đều đạt kết quả PASSED:"
+        "Dự án tích hợp bộ 179 bài kiểm thử tự động với Pytest, chạy hoàn toàn độc lập với database in-memory, "
+        "kiểm tra toàn diện các tiêu chí bảo mật, nghiệp vụ bán hàng, hệ thống RESTful API và luồng đặt lại mật khẩu:"
     )
 
-    add_image_with_caption("07_test_terminal.png", "Hình 8: Kết quả chạy thực tế 165/165 bài kiểm thử tự động với Pytest (100% Passed)", width_inches=6.0)
+    add_image_with_caption("07_test_terminal.png", "Hình 8: Ghi nhận kết quả thực thi bộ kiểm thử tự động Pytest (179/179 bài kiểm thử passed)", width_inches=6.0)
 
     test_suites_data = [
         ("tests/test_admin.py", "23 tests", "Kiểm tra RBAC 3 vai trò, Dashboard thống kê (doanh thu, người dùng, tồn kho), CRUD sản phẩm, cập nhật đơn"),
@@ -542,6 +571,7 @@ def build_comprehensive_document():
         ("tests/test_api_products.py", "12 tests", "Kiểm tra GET /api/products, GET /api/products/<id>, lọc danh mục, phân trang"),
         ("tests/test_auth_change_password.py", "8 tests", "Kiểm tra đổi mật khẩu: yêu cầu login, sai pass cũ, pass ngắn, lệch xác nhận, cập nhật hash thành công"),
         ("tests/test_auth_register.py", "9 tests", "Kiểm tra đăng ký, validate form, kiểm tra trùng email, login session, next_url an toàn"),
+        ("tests/test_auth_reset_password.py", "14 tests", "Kiểm tra quên/đặt lại mật khẩu: sinh token URLSafeTimed 30p, chống rò rỉ email, token giả mạo/quá hạn, validate mật khẩu mới, cập nhật hash"),
         ("tests/test_cart_checkout.py", "20 tests", "Kiểm tra thêm/sửa/xóa giỏ hàng AJAX, checkout trừ tồn kho, tính tổng tiền"),
         ("tests/test_csrf_security.py", "9 tests", "Kiểm tra bắt buộc CSRF token trên mọi form POST, chặn request giả mạo"),
         ("tests/test_models.py", "7 tests", "Kiểm tra quan hệ ORM giữa các bảng, Cascade, kiểu dữ liệu Unicode và Numeric"),
@@ -556,10 +586,41 @@ def build_comprehensive_document():
 
     add_h2("5.1. Bảng phân công trách nhiệm & Tỷ lệ đóng góp")
     members_data = [
-        ("Châu Lê Gia Bảo\n(Nhóm trưởng)", "Kiến trúc tổng thể Application Factory, thiết kế Database Models & Migrations, tính năng Shop & Giỏ hàng AJAX (cart.js), tích hợp Docker Compose & SQL Server.", "25%"),
-        ("Hà Trung Kiên", "Hệ thống xác thực Flask-Login, Đăng ký/Đăng nhập/Đăng xuất, Đổi mật khẩu (/auth/change-password), Bảo mật CSRFProtect & is_safe_url, Module Đánh giá sản phẩm.", "25%"),
-        ("Trần Vũ Hoàng Long", "Phân hệ Quản trị Admin, Ma trận RBAC 3 vai trò (Admin, Staff, Customer), Admin Dashboard thống kê doanh thu & KPI người dùng, CRUD Sản phẩm & Quản lý đơn hàng.", "25%"),
-        ("Minh Tuấn", "Xây dựng hệ thống 7 RESTful API JSON, Xác thực Flask-JWT-Extended Bearer Token, Tầng dịch vụ sản phẩm (product_service.py) và bộ lọc tìm kiếm/phân trang.", "25%")
+        (
+            "Châu Lê Gia Bảo\n(Nhóm trưởng)",
+            "Kiến trúc hệ thống, Phân hệ Xác thực (Auth) & 7 RESTful API:\n"
+            "• Thiết lập cấu trúc Flask Application Factory (create_app), cấu hình Blueprints và tích hợp toàn hệ thống.\n"
+            "• Hiện thực phân hệ Xác thực Flask-Login: Đăng ký (/auth/register), Đăng nhập (/auth/login), Đổi mật khẩu (/auth/change-password), Quên & Đặt lại mật khẩu (/auth/forgot-password, /auth/reset-password/<token>), Đăng xuất (/auth/logout).\n"
+            "• Ma trận phân quyền RBAC 3 vai trò, middleware before_request, kiểm tra URL an toàn (is_safe_url), cấu hình bảo vệ CSRF.\n"
+            "• Thiết kế và hiện thực 7 RESTful API JSON có xác thực Flask-JWT-Extended (Bearer Token).",
+            "25%"
+        ),
+        (
+            "Hà Trung Kiên",
+            "Cơ sở dữ liệu (Database) & Phân hệ Sản phẩm (Product) + Đánh giá (Reviews):\n"
+            "• Thiết kế kiến trúc CSDL 6 bảng chuẩn hóa, cấu hình SQLAlchemy Models và di trú Flask-Migrate / Alembic.\n"
+            "• Xây dựng dữ liệu mẫu ban đầu (seed.py: 4 danh mục phẳng, 23 sản phẩm thực tế kèm link ảnh).\n"
+            "• Hiện thực trang Danh mục sản phẩm (/products), Chi tiết sản phẩm, bộ lọc giá đa tiêu chí, tìm kiếm từ khóa, phân trang 8 SP/trang.\n"
+            "• Xây dựng phân hệ Đánh giá sản phẩm (Reviews 1-5 sao, 1 đánh giá/user/sp, tính điểm trung bình).",
+            "25%"
+        ),
+        (
+            "Lâm Đức Tuấn",
+            "Phân hệ Giỏ hàng (Cart) & Thanh toán (Checkout):\n"
+            "• Hiện thực cơ chế quản lý Giỏ hàng bất đồng bộ bằng Session kết hợp AJAX Fetch API trong cart.js.\n"
+            "• Xử lý các thao tác tương tác thời gian thực: thêm vào giỏ, tăng/giảm số lượng, xóa sản phẩm không reload trang, gửi kèm header X-CSRFToken.\n"
+            "• Xây dựng quy trình Thanh toán đơn hàng (/checkout) an toàn với form Flask-WTF (CheckoutForm), kiểm tra validation dữ liệu giao hàng COD, lưu đơn hàng (DONHANG, CHITIETDONHANG).",
+            "25%"
+        ),
+        (
+            "Trần Vũ Hoàng Long",
+            "Phân hệ Quản trị (Admin Panel) & Triển khai Hệ thống (Docker):\n"
+            "• Thiết kế và hiện thực Admin Dashboard: thẻ thống kê doanh thu, người dùng, phân loại đơn hàng theo trạng thái, cảnh báo tồn kho thấp.\n"
+            "• Chức năng Quản lý Sản phẩm (toàn quyền Product CRUD chỉ dành cho Admin).\n"
+            "• Chức năng Quản lý Đơn hàng: xem danh sách đơn hàng, xem chi tiết và cập nhật trạng thái đơn (Admin & Staff).\n"
+            "• Đóng gói ứng dụng với Dockerfile (user non-root) và docker-compose.yml kết nối SQL Server 2022; viết tài liệu hướng dẫn README.md.",
+            "25%"
+        )
     ]
     add_table(["Thành viên thực hiện", "Nhiệm vụ & Module phụ trách chính", "Đóng góp"], members_data, [1.8, 4.17, 0.8])
 
@@ -567,8 +628,8 @@ def build_comprehensive_document():
     p_git = doc.add_paragraph()
     p_git.add_run(
         "Nhóm áp dụng mô hình Git Feature Branch Workflow:\n"
-        "• Nhánh chính (main): Chỉ chứa mã nguồn ổn định, đã chạy pass toàn bộ 165 test cases và được review kỹ lưỡng.\n"
-        "• Nhánh chức năng (feature/*): Từng thành viên tạo nhánh riêng khi phát triển tính năng mới (ví dụ: feature/admin-rbac, feature/jwt-api, feature/change-password, feature/ajax-cart).\n"
+        "• Nhánh chính (main): Chỉ chứa mã nguồn ổn định, đã vượt qua bộ 179 bài kiểm thử tự động và được review kỹ lưỡng.\n"
+        "• Nhánh chức năng (feature/*): Từng thành viên tạo nhánh riêng khi phát triển tính năng mới (ví dụ: feature/admin-rbac, feature/jwt-api, feature/change-password, feature/forgot-password, feature/ajax-cart).\n"
         "• Commit Convention: Tuân thủ định dạng chuẩn Conventional Commits (feat: tính năng mới, fix: sửa lỗi, test: viết bài test, refactor: tái cấu trúc code).\n"
         "• Pull Request & Code Review: Mỗi thành viên tạo Pull Request vào main và cần ít nhất một thành viên khác kiểm tra mã nguồn trước khi merge."
     )
@@ -578,27 +639,30 @@ def build_comprehensive_document():
 
     add_h2("6.1. Bảng đối chiếu kết quả thực tế với yêu cầu đề tài")
     eval_data = [
-        ("Flask 3.11+, SQL Server", "Đạt yêu cầu", "Python 3.12, Flask 3.1.3; hỗ trợ đồng thời SQLite và SQL Server 2022 qua Docker. pyodbc và ODBC Driver 18.", "SQL Server chạy qua Docker; Local chạy SQLite."),
-        (">= 4 bảng, >= 1 quan hệ M:N", "Đạt yêu cầu", "6 bảng chuẩn hóa; DANHGIA là quan hệ M:N giữa User và Sản phẩm có ràng buộc UNIQUE và CHECK sao.", "Tên cột khớp chuẩn xác 100% với model."),
-        ("Flask-WTF, CSRF mọi form", "Đạt yêu cầu", "CSRFProtect bật toàn hệ thống; form checkout dùng Flask-WTF; cart.js gửi X-CSRFToken header.", "Một số form admin dùng HTML thuần + CSRF token."),
+        ("Python 3.11+, SQL Server & SQLite", "Đạt yêu cầu", "Chạy trên Python 3.12 và Flask 3.1.3; hỗ trợ song song SQLite (local dev) và SQL Server 2022 Express qua Docker Compose với ODBC Driver 18.", "SQL Server triển khai qua Docker; kiểm thử nhanh qua SQLite in-memory."),
+        (">= 4 bảng, >= 1 quan hệ M:N", "Đạt yêu cầu", "6 bảng chuẩn hóa; DANHGIA là quan hệ M:N giữa User và Sản phẩm có ràng buộc UNIQUE và CHECK sao.", "Tên cột khớp chuẩn xác với model và lược đồ CSDL."),
+        ("Bảo vệ CSRF toàn cục & Flask-WTF", "Đạt yêu cầu", "Form Checkout áp dụng Flask-WTF (CheckoutForm) với đầy đủ CSRF token và validation dữ liệu. Toàn bộ ứng dụng kích hoạt CSRFProtect bắt buộc kiểm tra token cho mọi request POST/PUT (kể cả form HTML ở Login, Register, Admin và Fetch AJAX qua header X-CSRFToken).", "Form Checkout dùng class FlaskForm; các form khác dùng HTML kết hợp token CSRF ẩn."),
         ("Flask-Login + RBAC >= 3 role", "Đạt yêu cầu", "Đầy đủ 3 roles: Admin, Staff, Customer; kiểm tra quyền chặt chẽ tại @admin_bp.before_request.", "Staff bị chặn 403 ở CRUD sản phẩm."),
         (">= 3 REST API, JSON, JWT", "Đạt yêu cầu", "7 API endpoints hoàn chỉnh, trả về JSON, xác thực Bearer JWT token, kiểm tra user hoạt động.", "Không có POST đơn qua API; đặt hàng qua web."),
         ("AJAX >= 1 tính năng", "Đạt yêu cầu", "Giỏ hàng tương tác thời gian thực bằng Fetch API (cart.js); cập nhật số lượng và tính tiền không reload.", "Giỏ hàng lưu trữ trong Session."),
-        ("Jinja2 + Bootstrap 5", "Đạt yêu cầu", "base.html kế thừa toàn app, Bootstrap 5.3.3, giao diện Glassmorphism hiện đại, responsive mobile.", "Đã bổ sung đầy đủ ảnh chụp minh họa."),
+        ("Jinja2 + Bootstrap 5", "Đạt yêu cầu", "base.html kế thừa toàn app, Bootstrap 5.3.3, giao diện Glassmorphism hiện đại, responsive mobile.", "Đã bổ sung đầy đủ ảnh chụp minh họa thực tế."),
         ("Flask-Migrate / Seed", "Đạt yêu cầu", "5 file migration lịch sử; seed.py nạp 4 danh mục và 23 sản phẩm; create_test_users.py nạp 3 tài khoản demo.", "Hỗ trợ bootstrap tự động trên Docker."),
-        ("Docker Containerization", "Đạt yêu cầu", "Dockerfile đa tầng, docker-compose.yml khởi chạy Flask Web (cổng 5050) và SQL Server 2022 Express.", "Chạy bằng user non-root bảo mật."),
-        ("Kiểm thử tự động", "Đạt yêu cầu", "165/165 bài kiểm thử tự động với Pytest passed 100% trong 8.55s.", "12 test suites chạy trên SQLite in-memory độc lập.")
+        ("Docker Containerization", "Đạt yêu cầu", "Dockerfile đơn tầng (Single-stage) dựa trên nền python:3.12-slim-bookworm, chạy user non-root bảo mật; docker-compose.yml điều phối Flask Web (cổng 5050) và SQL Server 2022.", "Cần chạy lệnh seed dữ liệu và tạo tài khoản mẫu sau khi khởi tạo DB."),
+        ("Kiểm thử tự động", "Đạt yêu cầu", "179/179 bài kiểm thử tự động với Pytest passed trong 11.29s.", "13 test suites chạy trên SQLite in-memory độc lập.")
     ]
     add_table(["Tiêu chí đề bài", "Trạng thái", "Dẫn chứng kỹ thuật & Minh chứng", "Ghi chú & Giới hạn thực tế"], eval_data, [1.4, 1.0, 2.5, 1.87])
 
     add_h2("6.2. Các hạn chế hiện tại của hệ thống (Known Limitations)")
     limitations = [
-        ("Chưa có tính năng Quên mật khẩu qua Email: ", "Hệ thống đã hiện thực đổi mật khẩu (/auth/change-password) an toàn cho người dùng đã đăng nhập; chức năng gửi token reset mật khẩu qua email khi quên pass chưa được triển khai."),
+        ("Cơ chế gửi Email Reset Mật khẩu trong môi trường nội bộ: ", "Tính năng Quên và Đặt lại mật khẩu (/auth/forgot-password, /auth/reset-password/<token>) đã được hiện thực hoàn chỉnh với token mã hóa ký số itsdangerous (hạn 30 phút) và cơ chế chống rò rỉ tài khoản (anti-enumeration). Trong môi trường phát triển hiện tại, hệ thống mô phỏng URL reset an toàn tại giao diện/console mà chưa kết nối trực tiếp với dịch vụ gửi thư SMTP đám mây (như SendGrid/AWS SES)."),
         ("Màn hình quản trị chưa có chức năng Quản lý người dùng: ", "Admin hiện quản lý Dashboard, Sản phẩm và Đơn hàng; chưa có màn hình giao diện để khóa/mở khóa hoặc đổi role tài khoản người dùng trực tiếp trên Web."),
         ("Giỏ hàng lưu trong Session: ", "Giỏ hàng hiện được lưu trữ trong Flask Session của trình duyệt nên thuận tiện cho cả khách vãng lai, nhưng chưa đồng bộ chéo giữa nhiều thiết bị của cùng một tài khoản."),
         ("Checkout bắt buộc đăng nhập tài khoản: ", "Khi khách bấm tiến hành thanh toán từ giỏ hàng, hệ thống yêu cầu đăng nhập tài khoản để quản lý đơn hàng gắn liền với người mua (chưa hỗ trợ Guest Checkout độc lập)."),
         ("Bảng CHITIETDONHANG chưa lưu đơn giá lịch sử: ", "Chi tiết đơn hàng lưu số lượng và khóa ngoại sản phẩm; tổng tiền đơn được chốt cố định trong TONGGIATRI của bảng DONHANG."),
-        ("Chính sách Đánh giá sản phẩm: ", "Hiện tại hệ thống cho phép bất kỳ tài khoản khách hàng nào đã đăng nhập đều có thể viết 1 đánh giá cho mỗi sản phẩm (chưa ràng buộc điều kiện phải có đơn hàng đã hoàn tất sản phẩm đó).")
+        ("Chính sách Đánh giá sản phẩm: ", "Hiện tại hệ thống cho phép bất kỳ tài khoản khách hàng nào đã đăng nhập đều có thể viết 1 đánh giá cho mỗi sản phẩm (chưa ràng buộc điều kiện phải có đơn hàng đã hoàn tất sản phẩm đó)."),
+        ("Kiểm chứng khóa đồng thời cao cấp trên SQL Server: ", "Hệ thống đã cài đặt with_for_update() và ràng buộc CHECK (SOLUONGTON >= 0); tuy nhiên việc kiểm thử tải đồng thời quy mô lớn (stress test đa luồng mô phỏng hàng trăm request thanh toán cùng mili-giây trên SQL Server thật) chưa được triển khai trong phạm vi đồ án hiện tại."),
+        ("Phạm vi áp dụng Flask-WTF trên các biểu mẫu: ", "Form Checkout đã áp dụng toàn diện class FlaskForm với các validator tùy chỉnh; các biểu mẫu khác (Đăng nhập, Đăng ký, Modal Admin) hiện vẫn sử dụng form HTML kết hợp token CSRF ẩn toàn cục qua CSRFProtect chứ chưa chuyển đổi toàn bộ sang kế thừa FlaskForm."),
+        ("Nghiệp vụ Đặt hàng độc quyền trên Web (Chưa có POST API): ", "7 RESTful API hiện tập trung phục vụ tra cứu thông tin (sản phẩm, đơn hàng), xác thực JWT và cập nhật trạng thái đơn; luồng tạo mới đơn hàng chưa mở qua API mà được kiểm soát độc quyền tại giao diện Web qua session và transaction nguyên tử.")
     ]
     for b_lim, n_lim in limitations:
         p_l = doc.add_paragraph(style='List Bullet')
@@ -610,6 +674,7 @@ def build_comprehensive_document():
 
     add_h2("6.3. Hướng phát triển trong tương lai (Future Roadmap)")
     future_work = [
+        ("Tích hợp dịch vụ gửi Email đám mây (Cloud SMTP): ", "Kết nối dịch vụ SendGrid hoặc AWS SES với Flask-Mail để tự động gửi thư kích hoạt tài khoản và link reset mật khẩu trực tiếp vào hòm thư cá nhân của khách hàng."),
         ("Tích hợp cổng thanh toán trực tuyến: ", "Mở rộng kết nối cổng VNPay, MoMo hoặc ZaloPay để thanh toán qua mã QR bên cạnh phương thức COD truyền thống."),
         ("Ứng dụng di động (Mobile App): ", "Xây dựng ứng dụng di động đa nền tảng bằng React Native hoặc Flutter kết nối trực tiếp với 7 RESTful API JWT đã hoàn thiện."),
         ("Đồng bộ giỏ hàng đa thiết bị: ", "Lưu trữ giỏ hàng trong cơ sở dữ liệu đối với người dùng đã đăng nhập để giỏ hàng không bị mất khi chuyển đổi giữa điện thoại và máy tính."),
@@ -634,15 +699,16 @@ def build_comprehensive_document():
 
     ai_logs = [
         ("1", "15/09/2026", "Châu Lê Gia Bảo", "Gợi ý cấu trúc thư mục Flask Application Factory và chia Blueprints", "Đề xuất cấu trúc module: shop, admin, auth, api, models, services", "Áp dụng cấu trúc thư mục phẳng trong app/"),
-        ("2", "22/09/2026", "Châu Lê Gia Bảo", "Tạo các model SQLAlchemy: DanhMuc, SanPham, DonHang, ChiTiet, DanhGia", "Code 6 models với kiểu Unicode, Numeric, quan hệ M:N DanhGia", "Áp dụng 6 model và thêm CK tồn kho >= 0"),
-        ("3", "02/10/2026", "Hà Trung Kiên", "Hiện thực Flask-Login, RBAC 3 vai trò, Werkzeug hashing, chống CSRF/Open Redirect", "Đề xuất @admin_required, before_request, is_safe_url, PBKDF2 hash", "Áp dụng vào auth/routes.py, admin/routes.py"),
-        ("4", "08/10/2026", "Châu Lê Gia Bảo", "Viết logic giỏ hàng AJAX Fetch API và khóa bi quan with_for_update()", "Code cart.js gửi X-CSRFToken, code with_for_update() khi checkout", "Áp dụng vào cart.js và shop/cart_routes.py"),
+        ("2", "22/09/2026", "Hà Trung Kiên", "Tạo các model SQLAlchemy: DanhMuc, SanPham, DonHang, ChiTiet, DanhGia", "Code 6 models với kiểu Unicode, Numeric, quan hệ M:N DanhGia", "Áp dụng 6 model và thêm CK tồn kho >= 0"),
+        ("3", "02/10/2026", "Châu Lê Gia Bảo", "Hiện thực Flask-Login, RBAC 3 vai trò, Werkzeug scrypt hashing, bảo vệ CSRF và is_safe_url", "Đề xuất @admin_required, before_request, is_safe_url, scrypt hash", "Áp dụng vào auth/routes.py, admin/routes.py"),
+        ("4", "08/10/2026", "Lâm Đức Tuấn", "Viết logic giỏ hàng AJAX Fetch API (cart.js) và luồng thanh toán Checkout an toàn", "Code cart.js gửi X-CSRFToken, code xử lý giỏ hàng trong session và form checkout", "Áp dụng vào cart.js, shop/cart_routes.py và forms.py"),
         ("5", "14/10/2026", "Trần Vũ Hoàng Long", "Thiết kế Admin Dashboard, thẻ doanh thu, phân loại đơn, CRUD sản phẩm", "Layout Bootstrap 5 dashboard, bảng lọc danh sách, form modal", "Áp dụng vào các template admin và admin/routes.py"),
-        ("6", "18/10/2026", "Minh Tuấn", "Xây dựng 7 RESTful API JSON xác thực bằng Flask-JWT-Extended", "Code 7 endpoints: auth/token, health, products, orders", "Áp dụng vào app/api/, kiểm tra user từ DB"),
-        ("7", "21/10/2026", "Cả nhóm", "Soạn thảo kịch bản kiểm thử tự động Pytest bao quát CSRF, RBAC, Cart, API", "Cấu trúc fixture SQLite in-memory, viết 156 test cases", "Chạy thực tế đạt 156/156 passed in 6.64s"),
-        ("8", "23/10/2026", "Châu Lê Gia Bảo", "Cấu hình Dockerfile đa tầng và docker-compose.yml chạy SQL Server 2022", "Dockerfile ODBC 18, gunicorn non-root; docker-compose cổng 5050", "Áp dụng vào Dockerfile, docker-compose.yml"),
-        ("9", "24/10/2026", "Cả nhóm", "Đối chiếu báo cáo với mã nguồn thực tế theo phản hồi của người chấm thi", "Phát hiện sai sót Bcrypt/Werkzeug, sai endpoint, sai cột DB", "Cập nhật tài liệu docs/ và sinh lại báo cáo Word"),
-        ("10", "24/10/2026", "Cả nhóm", "Hoàn thiện mã nguồn: bổ sung Đổi mật khẩu (/auth/change-password) và KPI Tổng người dùng", "Code view change_password, template change_password.html, user_count trong dashboard, 9 unit tests", "Áp dụng vào app/auth/routes.py, admin/routes.py, tests/ (165 test cases passed)")
+        ("6", "18/10/2026", "Châu Lê Gia Bảo", "Xây dựng 7 RESTful API JSON xác thực bằng Flask-JWT-Extended", "Code 7 endpoints: auth/token, health, products, orders", "Áp dụng vào app/api/, kiểm tra user từ DB"),
+        ("7", "21/10/2026", "Cả nhóm", "Soạn thảo kịch bản kiểm thử tự động Pytest bao quát CSRF, RBAC, Cart, API", "Cấu trúc fixture SQLite in-memory, viết bộ kiểm thử tự động", "Chạy thực tế đạt 165/165 passed in 13.26s"),
+        ("8", "23/10/2026", "Trần Vũ Hoàng Long, Châu Lê Gia Bảo", "Cấu hình Dockerfile đơn tầng và docker-compose.yml chạy SQL Server 2022", "Dockerfile ODBC 18, gunicorn non-root; docker-compose cổng 5050", "Áp dụng vào Dockerfile, docker-compose.yml"),
+        ("9", "24/10/2026", "Cả nhóm", "Rà soát, chuẩn hóa báo cáo kỹ thuật với toàn bộ mã nguồn thực tế và kiểm thử tự động", "Chuẩn hóa thuật ngữ công nghệ (scrypt, Dockerfile single-stage), hoàn thiện tài liệu hướng dẫn và lược đồ CSDL", "Cập nhật docs/ và sinh báo cáo Word hoàn chỉnh"),
+        ("10", "24/10/2026", "Cả nhóm", "Hoàn thiện mã nguồn: bổ sung Đổi mật khẩu (/auth/change-password) và KPI Tổng người dùng", "Code view change_password, template change_password.html, user_count trong dashboard, 9 unit tests", "Áp dụng vào app/auth/routes.py, admin/routes.py, tests/ (165 test cases passed)"),
+        ("11", "24/10/2026", "Châu Lê Gia Bảo", "Bổ sung tính năng Quên và Đặt lại mật khẩu an toàn (/auth/forgot-password, /auth/reset-password/<token>) sử dụng URLSafeTimedSerializer", "Đề xuất token serializer có chữ ký bảo mật 30 phút, thông báo trung lập chống user enumeration, giao diện forgot/reset và bộ 14 unit tests", "Áp dụng vào app/auth/routes.py, app/templates/forgot_password.html, app/templates/reset_password.html, tests/test_auth_reset_password.py (179 test cases passed)")
     ]
     add_table(["STT", "Ngày", "Thành viên", "Mục tiêu & Tóm tắt Prompt", "Đề xuất của AI", "Phần áp dụng thực tế vào repo"], ai_logs, [0.4, 0.8, 1.2, 1.7, 1.5, 1.17])
 
@@ -667,18 +733,38 @@ def build_comprehensive_document():
 
     add_callout(
         "KẾT LUẬN & CAM KẾT HỌC THUẬT",
-        "Báo cáo đồ án Topic 8 (Mini E-Commerce Store) phản ánh trung thực 100% kiến trúc, mã nguồn thực tế và kết quả kiểm nghiệm của nhóm tại kho lưu trữ GitHub ChauLeGiaBao/MiniEcommerce-PWD301. Toàn bộ các khiếm khuyết được chỉ ra đã được rà soát, đính chính và bổ sung đầy đủ minh chứng thực nghiệm."
+        "Báo cáo đồ án Topic 8 (Mini E-Commerce Store) phản ánh trung thực kiến trúc, mã nguồn thực tế và kết quả kiểm nghiệm của nhóm sinh viên tại kho lưu trữ GitHub ChauLeGiaBao/MiniEcommerce-PWD301. Toàn bộ các nội dung trong báo cáo đã được đối chiếu nghiêm túc và có đầy đủ minh chứng kỹ thuật."
     )
 
-    # Lưu file Word
-    output_path = os.path.join(BASE_DIR, "Bao_Cao_De_Tai_Topic_8_MiniEcommerce.docx")
-    try:
-        doc.save(output_path)
-        print(f"[SUCCESS] Comprehensive project report generated successfully at: {output_path}")
-    except PermissionError:
-        fallback_path = os.path.join(BASE_DIR, "Bao_Cao_De_Tai_Topic_8_MiniEcommerce_CapNhat.docx")
-        doc.save(fallback_path)
-        print(f"[WARN] File dang mo trong Microsoft Word. Da luu ban cap nhat moi nhat vao: {fallback_path}")
+    doc.add_paragraph("\n")
+    p_sign = doc.add_paragraph()
+    p_sign.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    r_date = p_sign.add_run("Đà Nẵng, ngày 24 tháng 10 năm 2026\n")
+    r_date.italic = True
+    r_group = p_sign.add_run("ĐẠI DIỆN NHÓM THỰC HIỆN ĐỀ TÀI TOPIC 8\n")
+    r_group.bold = True
+    r_group.font.color.rgb = color_primary
+    r_leader = p_sign.add_run("Châu Lê Gia Bảo (Nhóm trưởng)\n")
+    r_leader.bold = True
+
+    # Lưu file Word: cố gắng ghi vào cả 2 file (file gốc và file CapNhat)
+    targets = [
+        ("File chinh", os.path.join(BASE_DIR, "Bao_Cao_De_Tai_Topic_8_MiniEcommerce.docx")),
+        ("File CapNhat", os.path.join(BASE_DIR, "Bao_Cao_De_Tai_Topic_8_MiniEcommerce_CapNhat.docx"))
+    ]
+    saved_any = False
+    for label, path in targets:
+        try:
+            doc.save(path)
+            print(f"[SUCCESS] Da ghi thanh cong vao {label}: {os.path.basename(path)}")
+            saved_any = True
+        except PermissionError:
+            print(f"[NOTE] {label} ({os.path.basename(path)}) dang mo trong Word/viewer nen bi khoa ghi.")
+
+    if not saved_any:
+        temp_path = os.path.join(BASE_DIR, "Bao_Cao_De_Tai_Topic_8_MiniEcommerce_MoiNhat.docx")
+        doc.save(temp_path)
+        print(f"[SUCCESS] Ca 2 file deu bi khoa. Da luu vao: {temp_path}")
 
 if __name__ == "__main__":
     build_comprehensive_document()
