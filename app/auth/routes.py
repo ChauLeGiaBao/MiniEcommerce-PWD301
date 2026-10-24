@@ -11,6 +11,7 @@ from flask import (
 )
 from flask_login import (
     current_user,
+    login_required,
     login_user,
     logout_user,
 )
@@ -295,3 +296,50 @@ def register():
         return redirect(url_for("shop.products"))
 
     return render_template("register.html", full_name="", email="", phone="", next_url=next_url)
+
+
+@auth_bp.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """
+    Đổi mật khẩu tài khoản người dùng đã đăng nhập.
+    Yêu cầu xác nhận mật khẩu hiện tại, kiểm tra độ dài mật khẩu mới
+    và cập nhật mật khẩu băm Werkzeug vào cơ sở dữ liệu.
+    """
+    if request.method == "POST":
+        old_password = request.form.get("old_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not old_password or not new_password or not confirm_password:
+            flash("Vui lòng điền đầy đủ tất cả các trường.", "warning")
+            return render_template("change_password.html"), 400
+
+        if not check_password_hash(current_user.PASSWORD_HASH or "", old_password):
+            flash("Mật khẩu hiện tại không chính xác.", "danger")
+            return render_template("change_password.html"), 400
+
+        if len(new_password) < 6:
+            flash("Mật khẩu mới phải có ít nhất 6 ký tự.", "warning")
+            return render_template("change_password.html"), 400
+
+        if new_password != confirm_password:
+            flash("Xác nhận mật khẩu mới không khớp.", "warning")
+            return render_template("change_password.html"), 400
+
+        if old_password == new_password:
+            flash("Mật khẩu mới không được trùng với mật khẩu cũ.", "warning")
+            return render_template("change_password.html"), 400
+
+        current_user.PASSWORD_HASH = generate_password_hash(new_password)
+        try:
+            db.session.commit()
+            flash("Đổi mật khẩu thành công! Mật khẩu mới đã được cập nhật.", "success")
+            return redirect(url_for("shop.products"))
+        except Exception:
+            db.session.rollback()
+            flash("Đã xảy ra lỗi khi lưu mật khẩu. Vui lòng thử lại sau.", "danger")
+            return render_template("change_password.html"), 500
+
+    return render_template("change_password.html")
+

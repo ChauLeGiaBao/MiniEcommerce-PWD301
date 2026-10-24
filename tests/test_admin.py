@@ -208,6 +208,18 @@ def test_dashboard_empty_db_no_crash(app, client):
     assert "Chưa có đơn hàng nào trong hệ thống" in page_text
 
 
+def test_dashboard_user_count_kpi(app, client):
+    """Kiểm tra KPI Tổng người dùng trên Dashboard hiển thị chính xác số tài khoản."""
+    admin, _, _ = create_test_users()
+    login_client(client, admin)
+
+    res = client.get("/admin/")
+    assert res.status_code == 200
+    page_text = html.unescape(res.get_data(as_text=True))
+    assert "Tổng người dùng" in page_text
+    assert "Khách hàng:" in page_text
+
+
 def test_dashboard_kpi_revenue_excludes_cancelled_orders(app, client):
     """
     Quy tắc LO02:

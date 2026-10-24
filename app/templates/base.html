@@ -137,6 +137,11 @@
                             {% endif %}
                         </span>
 
+                        <!-- Change Password Link -->
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-light btn-sm nav-btn" title="Đổi mật khẩu tài khoản">
+                            <i class="bi bi-key me-1"></i> Đổi mật khẩu
+                        </a>
+
                         <!-- Logout Form -->
                         <form method="POST" action="{{ url_for('auth.logout') }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

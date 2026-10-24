@@ -158,6 +158,8 @@ def dashboard():
     """
     product_count = SanPham.query.count()
     order_count = DonHang.query.count()
+    user_count = User.query.count()
+    customer_count = User.query.filter(func.lower(User.ROLE) == "customer").count()
     low_stock_count = SanPham.query.filter(SanPham.SOLUONGTON <= LOW_STOCK_THRESHOLD).count()
 
     # Thống kê doanh thu (an toàn khi DB chưa có order, scalar trả về None -> 0)
@@ -198,6 +200,8 @@ def dashboard():
         "admin_dashboard.html",
         product_count=product_count,
         order_count=order_count,
+        user_count=user_count,
+        customer_count=customer_count,
         low_stock_count=low_stock_count,
         low_stock_threshold=LOW_STOCK_THRESHOLD,
         total_revenue=total_revenue,

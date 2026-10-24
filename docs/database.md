@@ -1,6 +1,6 @@
 # Tài liệu database – Mini E-Commerce Store (PWD301)
 
-Database: **SQL Server** (`EcommerceDB`), truy cập bằng Flask-SQLAlchemy.
+Database: **SQL Server** (`MiniEcommerceDB`), truy cập bằng Flask-SQLAlchemy.
 Schema do các model trong `app/models/` quyết định, thay đổi schema thông qua Flask-Migrate (thư mục `migrations/`).
 
 ## 1. Sơ đồ quan hệ
@@ -11,10 +11,13 @@ erDiagram
     NGUOIDUNG |o--o{ DONHANG : "đặt"
     DONHANG ||--|{ CHITIETDONHANG : "gồm"
     SANPHAM ||--o{ CHITIETDONHANG : "xuất hiện trong"
+    NGUOIDUNG ||--o{ DANHGIA : "viết"
+    SANPHAM ||--o{ DANHGIA : "nhận"
 ```
 
 - Danh mục **phẳng một cấp** (đã bỏ cột `MADMCHA`).
 - `DONHANG.MANGUOIDUNG` có thể là `NULL`: khách chưa đăng nhập vẫn đặt hàng được.
+- `DANHGIA` là quan hệ nhiều-nhiều (M:N) giữa `NGUOIDUNG` và `SANPHAM` kèm ràng buộc một user chỉ đánh giá một sản phẩm một lần.
 
 ## 2. Các bảng
 
@@ -32,7 +35,7 @@ erDiagram
 | HINHANH | VARCHAR(500) | Link ảnh `http(s)://...`. Rỗng hoặc không phải link (vd `no-image.jpg`) thì web hiện ảnh mặc định |
 | DONGIA | NUMERIC(18,2) | Đơn giá (đ) |
 | MOTA | NVARCHAR(500) | Mô tả |
-| SOLUONGTON | INT, mặc định 0 | Tồn kho |
+| SOLUONGTON | INT, mặc định 0 | Tồn kho; có CHECK constraint `CK_SANPHAM_SOLUONGTON` (`SOLUONGTON >= 0`) |
 | TRANGTHAISPH | INT, mặc định 1 | `1` = Đang bán (Active), `0` = Tạm ẩn (Inactive) |
 | MADANHMUC | INT, FK → DANHMUC | |
 
@@ -41,12 +44,12 @@ erDiagram
 |---|---|---|
 | MANGUOIDUNG | INT, PK, tự tăng | |
 | HOTEN | NVARCHAR(200), NOT NULL | |
-| EMAIL | VARCHAR(200) | |
+| EMAIL | VARCHAR(200) | Địa chỉ email đăng nhập (kiểm tra unique ở tầng service/form) |
 | SDT | VARCHAR(10) | |
 | NGAYSINH | DATE | |
-| PASSWORD_HASH | VARCHAR(255) | Mật khẩu đã băm, không lưu mật khẩu thô |
-| ROLE | VARCHAR(20), mặc định `customer` | Vai trò (`customer`, `admin`...) |
-| TRANGTHAIND | INT, mặc định 1 | Trạng thái tài khoản |
+| PASSWORD_HASH | VARCHAR(255) | Mật khẩu đã băm bằng Werkzeug (PBKDF2/scrypt), không lưu mật khẩu thô |
+| ROLE | VARCHAR(20), mặc định `customer` | Vai trò: `customer`, `staff`, `admin` |
+| TRANGTHAIND | INT, mặc định 1 | Trạng thái tài khoản (1 = Hoạt động, 0 = Bị khóa) |
 
 ### DONHANG (model `DonHang`)
 | Cột | Kiểu | Ghi chú |
@@ -145,7 +148,7 @@ Hai bảng `DANHMUC_BACKUP` và `SANPHAM_BACKUP` (bản sao lưu cũ, không thu
 
 - `CHITIETDONHANG` không lưu đơn giá tại thời điểm mua, nên đổi giá sản phẩm sẽ làm thành tiền từng dòng trong đơn cũ hiển thị theo giá mới (`TONGGIATRI` của đơn vẫn giữ nguyên giá lúc đặt).
 - Chưa có cột ngày tạo cho sản phẩm.
-- Chưa có CHECK constraint cho giá và tồn kho; việc kiểm tra hiện nằm ở tầng form admin.
+- Đã có CHECK constraint `CK_SANPHAM_SOLUONGTON` (`SOLUONGTON >= 0`) ở database (migration `4877af4546c5`); kiểm tra đơn giá không âm nằm ở tầng validation logic/form admin.
 
 ## Bảng DANHGIA (đánh giá sản phẩm, quan hệ M:N User - Product)
 

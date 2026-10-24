@@ -48,6 +48,13 @@ with app.app_context():
     )
 
     create_or_update_user(
+        email="staff@minishop.local",
+        password="Staff@123",
+        full_name="Mini Shop Staff",
+        role="staff",
+    )
+
+    create_or_update_user(
         email="customer@minishop.local",
         password="Customer@123",
         full_name="Test Customer",
@@ -61,6 +68,10 @@ with app.app_context():
     print("ADMIN")
     print("Email: admin@minishop.local")
     print("Password: Admin@123")
+    print()
+    print("STAFF")
+    print("Email: staff@minishop.local")
+    print("Password: Staff@123")
     print()
     print("CUSTOMER")
     print("Email: customer@minishop.local")
